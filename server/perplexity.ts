@@ -61,7 +61,7 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
     console.log('Making API request to OpenRouter...');
     
     const completion = await openai.chat.completions.create({
-      model: "perplexity/sonar-reasoning",
+      model: "perplexity/sonar-pro",
       messages: [
         {
           role: "system",

@@ -111,3 +111,4 @@ Changelog:
 - July 05, 2025. Feature Description Removal: Removed feature bullet points (Real-time search, Direct product links, tonerweb.no exclusive) for ultra-minimal branding
 - July 05, 2025. Subtitle Removal: Removed "Intelligent Product Search Assistant" subtitle for purest possible branding with just "TonerWeb AI"
 - July 05, 2025. Norwegian Translation: Translated entire interface to Norwegian including prompts, placeholders, error messages, and AI system instructions
+- January 10, 2025. AI Model Update: Changed from perplexity/sonar-reasoning to perplexity/sonar-pro for improved performance
