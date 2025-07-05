@@ -26,9 +26,7 @@ export default function ChatInterface({ chatState, updateChatState, addMessage }
                   <Zap className="h-10 w-10 text-white" />
                 </div>
               </div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-8 animate-gradient">
-                TonerWeb AI
-              </h1>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-8 animate-gradient">Toner? Spør TonerWeb</h1>
 
             </div>
           </div>
@@ -44,7 +42,6 @@ export default function ChatInterface({ chatState, updateChatState, addMessage }
           <ActionButtons />
         )}
       </div>
-
       {hasMessages && (
         <div className="w-full max-w-4xl mt-8">
           <ChatMessages messages={chatState.messages} />
