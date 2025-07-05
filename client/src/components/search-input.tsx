@@ -51,26 +51,29 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
 
   return (
     <div className="relative">
-      <div className="grok-input rounded-2xl border grok-border p-4 focus-within:border-blue-500 transition-colors duration-150">
-        <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="icon" className="grok-text-secondary hover:grok-text">
-            <Paperclip className="h-5 w-5" />
-          </Button>
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="What printer or toner do you need help with?"
-            className="flex-1 bg-transparent grok-text placeholder:grok-text-secondary text-lg border-none focus-visible:ring-0"
-          />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="grok-text-secondary hover:grok-text"
-            onClick={handleSubmit}
-          >
-            <Send className="h-5 w-5" />
-          </Button>
+      <div className="relative bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-[1px]">
+        <div className="bg-gray-900 rounded-2xl p-4 focus-within:shadow-lg focus-within:shadow-blue-500/20 transition-all duration-300">
+          <div className="flex items-center space-x-3">
+            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-200 transition-colors">
+              <Paperclip className="h-5 w-5" />
+            </Button>
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask about printers, toners, or compatible cartridges..."
+              className="flex-1 bg-transparent text-white placeholder:text-gray-500 text-lg border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-400 hover:text-gray-200 transition-colors"
+              onClick={handleSubmit}
+              disabled={!query.trim()}
+            >
+              <Send className={`h-5 w-5 ${query.trim() ? 'text-blue-400' : ''}`} />
+            </Button>
+          </div>
         </div>
       </div>
 

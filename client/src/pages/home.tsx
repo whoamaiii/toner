@@ -9,7 +9,7 @@ export default function Home() {
     messages: [],
     isTyping: false,
     searchMode: 'DeepSearch',
-    selectedModel: 'gpt-4o'
+    selectedModel: 'gemini-2.5-flash'
   });
 
   const updateChatState = (updates: Partial<ChatState>) => {

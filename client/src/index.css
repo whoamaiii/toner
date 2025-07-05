@@ -63,8 +63,9 @@
 
   body {
     @apply font-sans antialiased;
-    background-color: var(--grok-bg);
+    background: linear-gradient(to bottom right, rgb(3, 7, 18), rgb(15, 23, 42), rgb(3, 7, 18));
     color: var(--grok-text);
+    min-height: 100vh;
   }
 }
 

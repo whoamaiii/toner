@@ -28,18 +28,26 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
   return (
     <div className="space-y-4">
       {messages.map((message) => (
-        <div key={message.id} className="flex items-start space-x-4 p-4 grok-surface rounded-xl border grok-border">
-          <div className="w-8 h-8 grok-accent rounded-full flex items-center justify-center flex-shrink-0">
+        <div key={message.id} className={`flex items-start space-x-4 p-6 rounded-xl ${
+          message.role === 'assistant' 
+            ? 'bg-gray-900/50 border border-gray-800' 
+            : 'bg-blue-500/10 border border-blue-500/20'
+        }`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+            message.role === 'assistant'
+              ? 'bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/20'
+              : 'bg-blue-500/20'
+          }`}>
             {message.role === 'assistant' ? (
-              <Zap className="h-4 w-4 text-white" />
+              <Zap className="h-5 w-5 text-white" />
             ) : (
-              <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                <span className="text-xs text-white font-medium">U</span>
-              </div>
+              <span className="text-sm text-blue-400 font-medium">U</span>
             )}
           </div>
           <div className="flex-1">
-            <div className="grok-text whitespace-pre-wrap">
+            <div className={`whitespace-pre-wrap ${
+              message.role === 'assistant' ? 'text-gray-200' : 'text-gray-300'
+            }`}>
               {message.content}
             </div>
             {message.role === 'assistant' && (

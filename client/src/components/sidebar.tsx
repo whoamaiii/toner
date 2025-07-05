@@ -16,14 +16,14 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="w-16 grok-surface border-r grok-border flex flex-col items-center py-4 space-y-4">
+    <div className="w-16 bg-gray-900/50 border-r border-gray-800/50 flex flex-col items-center py-4 space-y-2">
       {sidebarItems.map((item, index) => (
         <Tooltip key={index}>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="p-3 hover:grok-input grok-text-secondary hover:grok-text transition-colors duration-150"
+              className="p-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
               onClick={item.action}
             >
               <item.icon className="h-5 w-5" />
