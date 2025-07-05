@@ -36,7 +36,7 @@ This is a full-stack web application built with React and TypeScript on the fron
 - **UI Components**: Comprehensive shadcn/ui component library with dark theme
 
 ### Backend Services
-- **AI Service**: Google Gemini 2.5 Flash model with search grounding and tonerweb.no-specific system prompts
+- **AI Service**: Perplexity Sonar Reasoning Pro model via OpenRouter for real-time product search on tonerweb.no
 - **Storage Layer**: PostgreSQL database with Drizzle ORM for persistent data storage
 - **Route Handlers**: API endpoints for chat, AI services, and database operations
 
@@ -50,8 +50,8 @@ This is a full-stack web application built with React and TypeScript on the fron
 1. **User Interaction**: User inputs messages through the chat interface
 2. **State Management**: Local state updates trigger UI changes and loading states
 3. **API Communication**: Frontend sends requests to `/api/ai/chat` endpoint
-4. **AI Processing**: Backend processes requests using Google Gemini 2.5 Flash with search grounding
-5. **Response Handling**: AI responses are displayed in the chat interface
+4. **AI Processing**: Backend processes requests using Perplexity Sonar for real-time web search
+5. **Response Handling**: AI responses with actual product URLs are displayed in the chat interface
 6. **Data Persistence**: Chat sessions and messages are stored in PostgreSQL database
 
 ## External Dependencies
@@ -103,3 +103,4 @@ Changelog:
 - July 05, 2025. Database integration: Added PostgreSQL database with Drizzle ORM, created database storage layer, added chat session and message persistence, updated API endpoints for database operations
 - July 05, 2025. TonerWeb specialization: Updated system prompts to restrict o3 model to only search and recommend products from tonerweb.no, rebranded interface from SuperGrok to TonerWeb AI, customized placeholder text for printer/toner queries
 - July 05, 2025. AI Model upgrade: Switched from OpenRouter/GPT-4o to Google Gemini 2.5 Flash with search grounding for better product search capabilities
+- July 05, 2025. Perplexity Integration: Replaced Gemini with Perplexity Sonar Reasoning Pro via OpenRouter for real-time web search and actual product URL extraction from tonerweb.no

@@ -28,9 +28,9 @@ export default function ChatInterface({ chatState, updateChatState, addMessage }
               </h1>
               <p className="text-gray-400">Your intelligent printer supply assistant</p>
               <div className="flex items-center gap-2 mt-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
-                  <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                  Gemini 2.5 Flash
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  <span className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></span>
+                  Perplexity Sonar Pro
                 </span>
                 <span className="text-xs text-gray-500">with tonerweb.no search</span>
               </div>

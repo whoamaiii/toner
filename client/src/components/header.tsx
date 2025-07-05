@@ -14,7 +14,7 @@ export default function Header() {
               <span className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 TonerWeb AI
               </span>
-              <p className="text-xs text-gray-500">Powered by Gemini 2.5 Flash</p>
+              <p className="text-xs text-gray-500">Powered by Perplexity Sonar Pro</p>
             </div>
           </div>
         </div>

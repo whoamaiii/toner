@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage";
 import { insertChatSessionSchema, insertMessageSchema } from "@shared/schema";
-import { generateTonerWebResponse } from "./gemini";
+import { searchTonerWebProducts } from "./perplexity";
 
 // AI Service using Google Gemini 2.5 Flash with search grounding
 interface AIRequest {
@@ -23,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { message, mode } = aiRequestSchema.parse(req.body);
       
-      const response = await generateTonerWebResponse(message, mode);
+      const response = await searchTonerWebProducts(message, mode);
       
       res.json({ content: response });
     } catch (error) {
