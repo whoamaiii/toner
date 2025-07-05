@@ -31,12 +31,6 @@ export default function ChatInterface({ chatState, updateChatState, addMessage }
               </h1>
               <p className="text-gray-300 text-lg mb-4">Intelligent Product Search Assistant</p>
               <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30">
-                    <span className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mr-2 animate-pulse"></span>
-                    Powered by Perplexity Sonar Pro
-                  </span>
-                </div>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
