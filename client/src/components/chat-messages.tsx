@@ -33,17 +33,17 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
         <div key={message.id} className={`flex items-start space-x-4 p-6 rounded-xl ${
           message.role === 'assistant' 
             ? 'bg-gray-900/50 border border-gray-800' 
-            : 'bg-blue-500/10 border border-blue-500/20'
+            : 'bg-purple-500/10 border border-purple-500/20'
         }`}>
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
             message.role === 'assistant'
-              ? 'bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/20'
-              : 'bg-blue-500/20'
+              ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/20'
+              : 'bg-purple-500/20'
           }`}>
             {message.role === 'assistant' ? (
               <Zap className="h-5 w-5 text-white" />
             ) : (
-              <span className="text-sm text-blue-400 font-medium">U</span>
+              <span className="text-sm text-purple-400 font-medium">U</span>
             )}
           </div>
           <div className="flex-1">

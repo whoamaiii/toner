@@ -20,19 +20,40 @@ export default function ChatInterface({ chatState, updateChatState, addMessage }
         {!hasMessages && (
           <div className="text-center mb-12">
             <div className="flex flex-col items-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
-                <Zap className="h-8 w-8 text-white" />
+              <div className="relative mb-6">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl blur-2xl opacity-30 animate-pulse"></div>
+                <div className="relative w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl">
+                  <Zap className="h-10 w-10 text-white" />
+                </div>
               </div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-3 animate-gradient">
                 TonerWeb AI
               </h1>
-              <p className="text-gray-400">Your intelligent printer supply assistant</p>
-              <div className="flex items-center gap-2 mt-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                  <span className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></span>
-                  Perplexity Sonar Pro
-                </span>
-                <span className="text-xs text-gray-500">with tonerweb.no search</span>
+              <p className="text-gray-300 text-lg mb-4">Intelligent Product Search Assistant</p>
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30">
+                    <span className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mr-2 animate-pulse"></span>
+                    Powered by Perplexity Sonar Pro
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Real-time search
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Direct product links
+                  </span>
+                  <span>•</span>
+                  <span>tonerweb.no exclusive</span>
+                </div>
               </div>
             </div>
           </div>

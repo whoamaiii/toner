@@ -20,10 +20,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // AI Chat endpoint
   app.post("/api/ai/chat", async (req, res) => {
+    console.log('AI Chat endpoint called with body:', req.body);
     try {
       const { message, mode } = aiRequestSchema.parse(req.body);
+      console.log('Parsed request:', { message, mode });
       
       const response = await searchTonerWebProducts(message, mode);
+      console.log('Response received from searchTonerWebProducts');
       
       res.json({ content: response });
     } catch (error) {

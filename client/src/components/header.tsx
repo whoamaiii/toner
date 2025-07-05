@@ -7,14 +7,14 @@ export default function Header() {
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
               <Zap className="h-5 w-5 text-white" />
             </div>
             <div>
-              <span className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="text-xl font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 TonerWeb AI
               </span>
-              <p className="text-xs text-gray-500">Powered by Perplexity Sonar Pro</p>
+              <p className="text-xs text-gray-500">Perplexity-Powered Search</p>
             </div>
           </div>
         </div>

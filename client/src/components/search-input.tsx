@@ -51,27 +51,31 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
 
   return (
     <div className="relative">
-      <div className="relative bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-[1px]">
-        <div className="bg-gray-900 rounded-2xl p-4 focus-within:shadow-lg focus-within:shadow-blue-500/20 transition-all duration-300">
+      <div className="relative bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-[1px]">
+        <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-4 focus-within:shadow-xl focus-within:shadow-purple-500/20 transition-all duration-300">
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-200 transition-colors">
-              <Paperclip className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-purple-300 transition-colors">
+              <Search className="h-5 w-5" />
             </Button>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask about printers, toners, or compatible cartridges..."
+              placeholder="Search for Canon, HP, Epson printers or toner cartridges..."
               className="flex-1 bg-transparent text-white placeholder:text-gray-500 text-lg border-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-gray-400 hover:text-gray-200 transition-colors"
+              className={`transition-all duration-200 ${
+                query.trim() 
+                  ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' 
+                  : 'text-gray-500'
+              }`}
               onClick={handleSubmit}
               disabled={!query.trim()}
             >
-              <Send className={`h-5 w-5 ${query.trim() ? 'text-blue-400' : ''}`} />
+              <Send className="h-5 w-5" />
             </Button>
           </div>
         </div>
