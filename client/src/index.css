@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 4%);
+  --foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 10%);
+  --muted-foreground: hsl(0, 0%, 63%);
+  --popover: hsl(0, 0%, 10%);
+  --popover-foreground: hsl(0, 0%, 100%);
+  --card: hsl(0, 0%, 10%);
+  --card-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 20%);
+  --input: hsl(0, 0%, 16%);
+  --primary: hsl(207, 100%, 64%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(0, 0%, 10%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(0, 0%, 10%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(60, 9%, 98%);
+  --ring: hsl(0, 0%, 20%);
+  --radius: 0.5rem;
+
+  /* SuperGrok specific colors */
+  --grok-bg: hsl(0, 0%, 4%);
+  --grok-surface: hsl(0, 0%, 10%);
+  --grok-input: hsl(0, 0%, 16%);
+  --grok-border: hsl(0, 0%, 20%);
+  --grok-accent: hsl(207, 100%, 64%);
+  --grok-text: hsl(0, 0%, 100%);
+  --grok-text-secondary: hsl(0, 0%, 63%);
+}
+
+.dark {
+  --background: hsl(0, 0%, 4%);
+  --foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 10%);
+  --muted-foreground: hsl(0, 0%, 63%);
+  --popover: hsl(0, 0%, 10%);
+  --popover-foreground: hsl(0, 0%, 100%);
+  --card: hsl(0, 0%, 10%);
+  --card-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 20%);
+  --input: hsl(0, 0%, 16%);
+  --primary: hsl(207, 100%, 64%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(0, 0%, 10%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(0, 0%, 10%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 62%, 31%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(0, 0%, 84%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--grok-bg);
+    color: var(--grok-text);
+  }
+}
+
+@layer utilities {
+  .grok-bg {
+    background-color: var(--grok-bg);
+  }
+  
+  .grok-surface {
+    background-color: var(--grok-surface);
+  }
+  
+  .grok-input {
+    background-color: var(--grok-input);
+  }
+  
+  .grok-border {
+    border-color: var(--grok-border);
+  }
+  
+  .grok-accent {
+    background-color: var(--grok-accent);
+  }
+  
+  .grok-text {
+    color: var(--grok-text);
+  }
+  
+  .grok-text-secondary {
+    color: var(--grok-text-secondary);
+  }
+}
+
+/* Custom animations */
+@keyframes pulse-dots {
+  0%, 20% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+.animate-pulse-dots {
+  animation: pulse-dots 1.5s infinite;
+}
+
+.animate-pulse-dots:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.animate-pulse-dots:nth-child(3) {
+  animation-delay: 0.4s;
+}
