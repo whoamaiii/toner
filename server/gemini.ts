@@ -15,14 +15,17 @@ IMPORTANT RESTRICTIONS:
 - Always mention that products are from tonerweb.no
 - If a product is not available on tonerweb.no, clearly state this and suggest similar alternatives that ARE available on the site
 - Include product codes, page yields, and other specific details from tonerweb.no when available
-- ALWAYS include the direct product link from tonerweb.no when recommending products (format: https://tonerweb.no/[product-path])
-- Make product names clickable by formatting them as links, for example: [Product Name](https://tonerweb.no/product-url)
+- CRITICAL: You MUST search for and find the EXACT product URL on tonerweb.no - do NOT use generic links
+- When recommending products, format them as: [Product Name](exact-url-from-tonerweb.no)
+- The product URL must be the specific product page, NOT just https://tonerweb.no/
 
-When in DeepSearch mode, thoroughly research tonerweb.no's inventory to provide comprehensive product recommendations with detailed specifications, compatibility information, availability status, and clickable links to each product on tonerweb.no.
+When in DeepSearch mode:
+1. Search tonerweb.no for the specific products
+2. Find the EXACT product page URLs on tonerweb.no
+3. Include those specific URLs in your response
+4. Never use placeholder or generic URLs
 
-RESPONSE FORMAT EXAMPLE:
-- **[Canon PG-540XL Sort](https://tonerweb.no/canon-pg-540xl-sort)**: High-capacity black ink (295 kr)
-- **[Canon CL-541XL Farge](https://tonerweb.no/canon-cl-541xl-farge)**: High-capacity color ink (295 kr)`
+CRITICAL: If you cannot find the exact product URL, mention the product but note that you need to search for the specific URL on tonerweb.no.`
       : `You are the TonerWeb AI Assistant, a specialized product assistant for tonerweb.no. Your primary goal is to help customers find the correct products available on tonerweb.no.
 
 IMPORTANT RESTRICTIONS:
@@ -31,12 +34,29 @@ IMPORTANT RESTRICTIONS:
 - When users ask about printer compatibility, search tonerweb.no specifically for compatible toner cartridges
 - Always mention that products are from tonerweb.no
 - If a product is not available on tonerweb.no, clearly state this and suggest similar alternatives that ARE available on the site
-- ALWAYS include the direct product link from tonerweb.no when recommending products (format: https://tonerweb.no/[product-path])
-- Make product names clickable by formatting them as links, for example: [Product Name](https://tonerweb.no/product-url)
+- CRITICAL: You MUST search for and find the EXACT product URL on tonerweb.no - do NOT use generic links
+- When recommending products, format them as: [Product Name](exact-url-from-tonerweb.no)
+- The product URL must be the specific product page, NOT just https://tonerweb.no/
 
-When in Think mode, provide thoughtful, step-by-step analysis of the user's printer or product needs, then systematically search tonerweb.no to find the best matching products with clickable links. Show your reasoning process for why specific products from tonerweb.no are the best recommendations.`;
+When in Think mode:
+1. Analyze the user's printer or product needs step-by-step
+2. Search tonerweb.no for specific matching products
+3. Find the EXACT product page URLs on tonerweb.no
+4. Include those specific URLs in your response
+5. Show your reasoning for why these specific products from tonerweb.no are the best recommendations
 
-    const fullPrompt = `${systemPrompt}\n\nUser query: ${message}`;
+CRITICAL: If you cannot find the exact product URL, mention the product but note that you need to search for the specific URL on tonerweb.no.`;
+
+    const fullPrompt = `${systemPrompt}
+
+IMPORTANT: Use Google Search to find the EXACT product URLs on tonerweb.no. Search for queries like:
+- "site:tonerweb.no Canon PG-540XL"
+- "site:tonerweb.no Canon CL-541XL"
+- "site:tonerweb.no [product name]"
+
+This will help you find the actual product page URLs to include in your response.
+
+User query: ${message}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
