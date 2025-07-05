@@ -26,10 +26,9 @@ export default function ChatInterface({ chatState, updateChatState, addMessage }
                   <Zap className="h-10 w-10 text-white" />
                 </div>
               </div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-3 animate-gradient">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-8 animate-gradient">
                 TonerWeb AI
               </h1>
-              <p className="text-gray-300 text-lg mb-4">Intelligent Product Search Assistant</p>
 
             </div>
           </div>
