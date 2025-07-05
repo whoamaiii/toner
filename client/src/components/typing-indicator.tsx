@@ -8,7 +8,7 @@ export default function TypingIndicator() {
           <Zap className="h-5 w-5 text-white" />
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-gray-400">Searching tonerweb.no for products</span>
+          <span className="text-gray-400">Søker på tonerweb.no etter produkter</span>
           <div className="flex space-x-1">
             <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
             <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>

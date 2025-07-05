@@ -8,7 +8,7 @@ export default function ActionButtons() {
   const exampleQueries = [
     { query: "Canon PIXMA MG3650S blekk", icon: Image },
     { query: "HP LaserJet toner", icon: Edit },
-    { query: "Epson EcoTank refill", icon: Newspaper },
+    { query: "Epson EcoTank påfyll", icon: Newspaper },
     { query: "Brother DCP-L2530DW toner", icon: Users }
   ];
 
@@ -23,7 +23,7 @@ export default function ActionButtons() {
 
   return (
     <div>
-      <p className="text-center text-gray-400 text-sm mb-4">Try these example searches:</p>
+      <p className="text-center text-gray-400 text-sm mb-4">Prøv disse eksempelsøkene:</p>
       <div className="grid grid-cols-2 gap-4">
         {exampleQueries.map((example, index) => (
           <Button

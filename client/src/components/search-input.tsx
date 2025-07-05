@@ -34,7 +34,7 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
       });
     } catch (error) {
       addMessage({
-        content: 'Sorry, I encountered an error while processing your request. Please try again.',
+        content: 'Beklager, jeg støtte på en feil under behandling av forespørselen din. Vennligst prøv igjen.',
         role: 'assistant'
       });
     } finally {
@@ -61,7 +61,7 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Search for Canon, HP, Epson printers or toner cartridges..."
+              placeholder="Søk etter Canon, HP, Epson skrivere eller tonerkassetter..."
               className="flex-1 bg-transparent text-white placeholder:text-gray-500 text-lg border-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             <Button 
