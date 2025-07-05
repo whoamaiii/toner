@@ -9,7 +9,7 @@ export default function Home() {
     messages: [],
     isTyping: false,
     searchMode: 'DeepSearch',
-    selectedModel: 'o3'
+    selectedModel: 'gpt-4o'
   });
 
   const updateChatState = (updates: Partial<ChatState>) => {

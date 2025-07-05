@@ -157,7 +157,7 @@ IMPORTANT RESTRICTIONS:
 When in Think mode, provide thoughtful, step-by-step analysis of the user's printer or product needs, then systematically search tonerweb.no to find the best matching products. Show your reasoning process for why specific products from tonerweb.no are the best recommendations.`;
 
     const completion = await openai.chat.completions.create({
-      model: "openai/o3",
+      model: "openai/gpt-4o",
       messages: [
         {
           role: "system",
