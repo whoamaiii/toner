@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import { storage } from "./storage";
 import { insertChatSessionSchema, insertMessageSchema } from "@shared/schema";
 
@@ -16,11 +16,8 @@ const aiRequestSchema = z.object({
   mode: z.enum(['DeepSearch', 'Think']),
 });
 
-// Initialize OpenRouter client
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: "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",
-});
+// Initialize Gemini client
+const genAI = new GoogleGenAI({ apiKey: "AIzaSyCHlUphzuYLfs4TXJpftQuTDH1aBQ17rDA" });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -130,8 +127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// O3 AI response generator using OpenRouter
-async function generateO3Response(message: string, mode: string): Promise<string> {
+// Gemini AI response generator
+async function generateGeminiResponse(message: string, mode: string): Promise<string> {
   try {
     const systemPrompt = mode === 'DeepSearch' 
       ? `You are the TonerWeb AI Assistant, a specialized product assistant for tonerweb.no - an e-commerce store that sells printer toners and supplies. Your primary goal is to help customers find the correct products available on tonerweb.no.
@@ -156,25 +153,18 @@ IMPORTANT RESTRICTIONS:
 
 When in Think mode, provide thoughtful, step-by-step analysis of the user's printer or product needs, then systematically search tonerweb.no to find the best matching products. Show your reasoning process for why specific products from tonerweb.no are the best recommendations.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "openai/gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
+    const model = genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: systemPrompt,
+        tools: [{ googleSearch: {} }],
+      },
     });
 
-    return completion.choices[0]?.message?.content || "I apologize, but I couldn't generate a response. Please try again.";
+    const response = await model.generateContent(message);
+    return response.text || "I apologize, but I couldn't generate a response. Please try again.";
   } catch (error) {
-    console.error('OpenRouter API Error:', error);
+    console.error('Gemini API Error:', error);
     
     // Fallback to ensure the app doesn't break
     if (mode === 'DeepSearch') {
