@@ -87,7 +87,7 @@ async function generateO3Response(message: string, mode: string): Promise<string
       : `You are SuperGrok, an advanced AI assistant. When in Think mode, provide thoughtful, step-by-step analysis. Break down complex topics and show your reasoning process. Be analytical and methodical.`;
 
     const completion = await openai.chat.completions.create({
-      model: "openai/o3-mini",
+      model: "openai/o3",
       messages: [
         {
           role: "system",

@@ -9,7 +9,7 @@ export default function Home() {
     messages: [],
     isTyping: false,
     searchMode: 'DeepSearch',
-    selectedModel: 'o3-mini'
+    selectedModel: 'o3'
   });
 
   const updateChatState = (updates: Partial<ChatState>) => {
