@@ -1,11 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
-import { GoogleGenAI } from "@google/genai";
 import { storage } from "./storage";
 import { insertChatSessionSchema, insertMessageSchema } from "@shared/schema";
+import { generateTonerWebResponse } from "./gemini";
 
-// AI Service using OpenRouter's o3 model
+// AI Service using Google Gemini 2.5 Flash with search grounding
 interface AIRequest {
   message: string;
   mode: string;
@@ -16,9 +16,6 @@ const aiRequestSchema = z.object({
   mode: z.enum(['DeepSearch', 'Think']),
 });
 
-// Initialize Gemini client
-const genAI = new GoogleGenAI({ apiKey: "AIzaSyCHlUphzuYLfs4TXJpftQuTDH1aBQ17rDA" });
-
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // AI Chat endpoint
@@ -26,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { message, mode } = aiRequestSchema.parse(req.body);
       
-      const response = await generateO3Response(message, mode);
+      const response = await generateTonerWebResponse(message, mode);
       
       res.json({ content: response });
     } catch (error) {
@@ -127,63 +124,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// Gemini AI response generator
-async function generateGeminiResponse(message: string, mode: string): Promise<string> {
-  try {
-    const systemPrompt = mode === 'DeepSearch' 
-      ? `You are the TonerWeb AI Assistant, a specialized product assistant for tonerweb.no - an e-commerce store that sells printer toners and supplies. Your primary goal is to help customers find the correct products available on tonerweb.no.
 
-IMPORTANT RESTRICTIONS:
-- ONLY search and recommend products from tonerweb.no
-- ONLY provide information about products that are actually available on tonerweb.no
-- When users ask about printer compatibility, search tonerweb.no specifically for compatible toner cartridges
-- Always mention that products are from tonerweb.no
-- If a product is not available on tonerweb.no, clearly state this and suggest similar alternatives that ARE available on the site
-- Include product codes, page yields, and other specific details from tonerweb.no when available
-
-When in DeepSearch mode, thoroughly research tonerweb.no's inventory to provide comprehensive product recommendations with detailed specifications, compatibility information, and availability status. Always cite tonerweb.no as your source.`
-      : `You are the TonerWeb AI Assistant, a specialized product assistant for tonerweb.no. Your primary goal is to help customers find the correct products available on tonerweb.no.
-
-IMPORTANT RESTRICTIONS:
-- ONLY search and recommend products from tonerweb.no
-- ONLY provide information about products that are actually available on tonerweb.no
-- When users ask about printer compatibility, search tonerweb.no specifically for compatible toner cartridges
-- Always mention that products are from tonerweb.no
-- If a product is not available on tonerweb.no, clearly state this and suggest similar alternatives that ARE available on the site
-
-When in Think mode, provide thoughtful, step-by-step analysis of the user's printer or product needs, then systematically search tonerweb.no to find the best matching products. Show your reasoning process for why specific products from tonerweb.no are the best recommendations.`;
-
-    const model = genAI.models.generateContent({
-      model: "gemini-2.5-flash",
-      config: {
-        systemInstruction: systemPrompt,
-        tools: [{ googleSearch: {} }],
-      },
-    });
-
-    const response = await model.generateContent(message);
-    return response.text || "I apologize, but I couldn't generate a response. Please try again.";
-  } catch (error) {
-    console.error('Gemini API Error:', error);
-    
-    // Fallback to ensure the app doesn't break
-    if (mode === 'DeepSearch') {
-      return `I encountered an issue accessing my deep search capabilities. Here's what I can tell you about "${message}" based on my knowledge:
-
-This topic involves several key aspects that are worth exploring. While I'm currently unable to access live search results, I can provide analysis based on established information and reasoning.
-
-Please try your question again, or let me know if you'd like me to approach this differently.`;
-    } else {
-      return `Let me think through "${message}" step by step:
-
-1. **Understanding the question**: I need to break down the core components of what you're asking.
-2. **Analyzing the context**: Considering the broader implications and related factors.
-3. **Reasoning through possibilities**: Exploring different angles and potential outcomes.
-4. **Synthesizing insights**: Bringing together the key points into a coherent response.
-
-I'm currently experiencing some technical difficulties, but I wanted to show you my thought process. Please try your question again.`;
-    }
-  }
-}
 
 
