@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Paperclip, Send, Search, Brain, ChevronDown, ArrowUp } from 'lucide-react';
+import { Send, Search } from 'lucide-react';
 import { Message, ChatState } from '@/types/chat';
 import { aiService } from '@/services/ai-service';
 
@@ -27,7 +27,7 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
     updateChatState({ isTyping: true });
 
     try {
-      const response = await aiService.sendMessage(query, chatState.searchMode);
+      const response = await aiService.sendMessage(query, 'DeepSearch');
       addMessage({
         content: response,
         role: 'assistant'
@@ -81,47 +81,7 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center space-x-2">
-          <div className="flex grok-surface rounded-lg p-1">
-            <Button
-              variant={chatState.searchMode === 'DeepSearch' ? 'default' : 'ghost'}
-              size="sm"
-              className={`px-3 py-1 text-sm font-medium transition-colors duration-150 ${
-                chatState.searchMode === 'DeepSearch' 
-                  ? 'grok-input grok-text' 
-                  : 'grok-text-secondary hover:grok-input'
-              }`}
-              onClick={() => updateChatState({ searchMode: 'DeepSearch' })}
-            >
-              <Search className="h-3 w-3 mr-1" />
-              DeepSearch
-            </Button>
-            <Button
-              variant={chatState.searchMode === 'Think' ? 'default' : 'ghost'}
-              size="sm"
-              className={`px-3 py-1 text-sm font-medium transition-colors duration-150 ${
-                chatState.searchMode === 'Think' 
-                  ? 'grok-input grok-text' 
-                  : 'grok-text-secondary hover:grok-input'
-              }`}
-              onClick={() => updateChatState({ searchMode: 'Think' })}
-            >
-              <Brain className="h-3 w-3 mr-1" />
-              Think
-            </Button>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="grok-text-secondary text-sm">{chatState.selectedModel}</span>
-          <Button variant="ghost" size="icon" className="grok-text-secondary hover:grok-text">
-            <ChevronDown className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="icon" className="grok-text-secondary hover:grok-text">
-            <ArrowUp className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
+
     </div>
   );
 }

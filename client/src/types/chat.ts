@@ -8,8 +8,6 @@ export interface Message {
 export interface ChatState {
   messages: Message[];
   isTyping: boolean;
-  searchMode: 'DeepSearch' | 'Think';
-  selectedModel: string;
 }
 
 export interface ActionButton {

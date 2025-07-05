@@ -7,9 +7,7 @@ import { Message, ChatState } from '@/types/chat';
 export default function Home() {
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
-    isTyping: false,
-    searchMode: 'DeepSearch',
-    selectedModel: 'gemini-2.5-flash'
+    isTyping: false
   });
 
   const updateChatState = (updates: Partial<ChatState>) => {
