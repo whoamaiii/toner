@@ -8,7 +8,7 @@ export default function TypingIndicator() {
           <Zap className="h-4 w-4 text-white" />
         </div>
         <div className="flex items-center space-x-2">
-          <span className="grok-text-secondary">SuperGrok is thinking</span>
+          <span className="grok-text-secondary">TonerWeb AI is thinking</span>
           <div className="flex space-x-1">
             <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse-dots"></div>
             <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse-dots"></div>

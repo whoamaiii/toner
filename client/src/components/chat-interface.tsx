@@ -23,7 +23,7 @@ export default function ChatInterface({ chatState, updateChatState, addMessage }
               <div className="w-12 h-12 grok-accent rounded-full flex items-center justify-center">
                 <Zap className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold grok-text">SuperGrok</h1>
+              <h1 className="text-3xl font-bold grok-text">TonerWeb AI</h1>
             </div>
           </div>
         )}

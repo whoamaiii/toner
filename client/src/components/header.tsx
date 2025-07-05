@@ -10,7 +10,7 @@ export default function Header() {
             <div className="w-8 h-8 grok-accent rounded-full flex items-center justify-center">
               <Zap className="h-4 w-4 text-white" />
             </div>
-            <span className="text-xl font-semibold grok-text">SuperGrok</span>
+            <span className="text-xl font-semibold grok-text">TonerWeb AI</span>
           </div>
         </div>
         <div className="flex items-center space-x-4">

@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import OpenAI from "openai";
+import { storage } from "./storage";
+import { insertChatSessionSchema, insertMessageSchema } from "@shared/schema";
 
 // AI Service using OpenRouter's o3 model
 interface AIRequest {
@@ -75,6 +77,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat session endpoints
+  app.post("/api/chat/sessions", async (req, res) => {
+    try {
+      const sessionData = insertChatSessionSchema.parse(req.body);
+      const session = await storage.createChatSession(sessionData);
+      res.json(session);
+    } catch (error) {
+      console.error('Create Session Error:', error);
+      res.status(500).json({ message: 'Failed to create chat session' });
+    }
+  });
+
+  app.get("/api/chat/sessions/:id", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: 'Session not found' });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error('Get Session Error:', error);
+      res.status(500).json({ message: 'Failed to get chat session' });
+    }
+  });
+
+  app.get("/api/chat/sessions/:id/messages", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const messages = await storage.getSessionMessages(sessionId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Get Messages Error:', error);
+      res.status(500).json({ message: 'Failed to get messages' });
+    }
+  });
+
+  // Message endpoints
+  app.post("/api/chat/messages", async (req, res) => {
+    try {
+      const messageData = insertMessageSchema.parse(req.body);
+      const message = await storage.createMessage(messageData);
+      res.json(message);
+    } catch (error) {
+      console.error('Create Message Error:', error);
+      res.status(500).json({ message: 'Failed to create message' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
@@ -83,8 +134,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 async function generateO3Response(message: string, mode: string): Promise<string> {
   try {
     const systemPrompt = mode === 'DeepSearch' 
-      ? `You are SuperGrok, an advanced AI assistant. When in DeepSearch mode, provide comprehensive, well-researched responses with multiple perspectives. Include relevant sources and detailed analysis. Be thorough and informative.`
-      : `You are SuperGrok, an advanced AI assistant. When in Think mode, provide thoughtful, step-by-step analysis. Break down complex topics and show your reasoning process. Be analytical and methodical.`;
+      ? `You are the TonerWeb AI Assistant, a specialized product assistant for tonerweb.no - an e-commerce store that sells printer toners and supplies. Your primary goal is to help customers find the correct products available on tonerweb.no.
+
+IMPORTANT RESTRICTIONS:
+- ONLY search and recommend products from tonerweb.no
+- ONLY provide information about products that are actually available on tonerweb.no
+- When users ask about printer compatibility, search tonerweb.no specifically for compatible toner cartridges
+- Always mention that products are from tonerweb.no
+- If a product is not available on tonerweb.no, clearly state this and suggest similar alternatives that ARE available on the site
+- Include product codes, page yields, and other specific details from tonerweb.no when available
+
+When in DeepSearch mode, thoroughly research tonerweb.no's inventory to provide comprehensive product recommendations with detailed specifications, compatibility information, and availability status. Always cite tonerweb.no as your source.`
+      : `You are the TonerWeb AI Assistant, a specialized product assistant for tonerweb.no. Your primary goal is to help customers find the correct products available on tonerweb.no.
+
+IMPORTANT RESTRICTIONS:
+- ONLY search and recommend products from tonerweb.no
+- ONLY provide information about products that are actually available on tonerweb.no
+- When users ask about printer compatibility, search tonerweb.no specifically for compatible toner cartridges
+- Always mention that products are from tonerweb.no
+- If a product is not available on tonerweb.no, clearly state this and suggest similar alternatives that ARE available on the site
+
+When in Think mode, provide thoughtful, step-by-step analysis of the user's printer or product needs, then systematically search tonerweb.no to find the best matching products. Show your reasoning process for why specific products from tonerweb.no are the best recommendations.`;
 
     const completion = await openai.chat.completions.create({
       model: "openai/o3",

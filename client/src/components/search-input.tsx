@@ -60,7 +60,7 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="What do you want to know?"
+            placeholder="What printer or toner do you need help with?"
             className="flex-1 bg-transparent grok-text placeholder:grok-text-secondary text-lg border-none focus-visible:ring-0"
           />
           <Button 
