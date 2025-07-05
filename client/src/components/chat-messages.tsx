@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown, Copy, Share2, Zap } from 'lucide-react';
 import { Message } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -45,11 +47,36 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
             )}
           </div>
           <div className="flex-1">
-            <div className={`whitespace-pre-wrap ${
-              message.role === 'assistant' ? 'text-gray-200' : 'text-gray-300'
-            }`}>
-              {message.content}
-            </div>
+            {message.role === 'assistant' ? (
+              <div className="text-gray-200">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({ href, children }) => (
+                      <a 
+                        href={href} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                      >
+                        {children}
+                      </a>
+                    ),
+                    p: ({ children }) => <p className="mb-3">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="ml-2">{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <div className="text-gray-300 whitespace-pre-wrap">
+                {message.content}
+              </div>
+            )}
             {message.role === 'assistant' && (
               <div className="flex items-center space-x-4 mt-4">
                 <Button 
