@@ -105,3 +105,4 @@ Changelog:
 - July 05, 2025. AI Model upgrade: Switched from OpenRouter/GPT-4o to Google Gemini 2.5 Flash with search grounding for better product search capabilities
 - July 05, 2025. Perplexity Integration: Replaced Gemini with Perplexity Sonar Reasoning Pro via OpenRouter for real-time web search and actual product URL extraction from tonerweb.no
 - July 05, 2025. UI Simplification: Removed DeepSearch/Think mode buttons and model selector dropdown for cleaner interface, now uses DeepSearch mode by default
+- July 05, 2025. Sidebar Removal: Removed sidebar navigation component to create a more focused, full-width chat interface
