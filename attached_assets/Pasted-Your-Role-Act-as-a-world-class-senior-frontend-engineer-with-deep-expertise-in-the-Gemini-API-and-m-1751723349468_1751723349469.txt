@@ -1,0 +1,39 @@
+Your Role: Act as a world-class senior frontend engineer with deep expertise in the Gemini API and modern UI/UX design.
+Project Goal: Create a single-page web application that functions as an "AI Product Assistant" for the e-commerce site tonerweb.no. The application will feature a clean and intuitive chat interface where customers can interact with an AI to get help with their products.
+Core Application Features:
+Chat Interface:
+The entire application should be a single, full-screen chat view.
+Display a conversation history with clear distinctions between user messages and AI responses.
+Include a text input field for the user to type their message and a "Send" button.
+Show a "typing" or "thinking" indicator while the AI is processing a request to provide user feedback.
+The initial message from the AI should welcome the user and explain what it can do (e.g., "Hello! I am the TonerWeb AI Assistant. Ask me for the correct toner for your printer, or inquire about any product we carry.").
+AI Assistant Capabilities & Logic:
+Primary Task: Find Toner for a Printer: This is the main function.
+User Input: The user will provide a printer model name (e.g., "HP LaserJet Pro M404dn", "Brother HL-L2350DW").
+AI Process:
+You must use the Google Gemini API with Google Search grounding enabled. This is critical for getting up-to-date information.
+The AI's task is to search the web to identify the specific toner cartridge model(s) compatible with the user's printer.
+After identifying the toner, the AI should formulate a response as if it has checked the tonerweb.no inventory.
+AI Response: The AI should reply with a clear, concise message.
+Example Success Response: "The printer HP LaserJet Pro M404dn uses the HP 59A Black Toner (CF259A). This item is currently in stock on tonerweb.no."
+Example Not Found Response: "I found that the printer XYZ Model uses ABC Toner, but it does not seem to be in stock on tonerweb.no at the moment."
+Display Sources: It is mandatory to display the web sources (URLs and titles) that the Gemini model used to find the information. List them clearly below the AI's response message.
+Secondary Task: General Product Inquiries:
+The AI should also be able to handle general questions about products sold on tonerweb.no (e.g., "What's the page yield for the HP 59A toner?"). It should use its general knowledge and search capabilities to answer these.
+Technical Specifications:
+Framework: Use React with TypeScript.
+Styling: Use Tailwind CSS for a clean, modern, and responsive design.
+API Client: Use the official @google/genai JavaScript SDK.
+Gemini API Configuration:
+Model: Use gemini-2.5-flash-preview-04-17.
+Grounding: You must enable Google Search grounding by including tools: [{googleSearch: {}}] in the config object of the generateContent call.
+System Instruction: Use a systemInstruction to define the AI's personality and goals. Here is a strong example to use:
+Generated code
+You are a friendly and professional AI Product Assistant for tonerweb.no, an e-commerce store that sells printer toner and supplies. Your primary goal is to help users find the correct toner for their printer. Use the provided search tool to find the most accurate and up-to-date information. When you identify a toner, confidently state whether it is in stock on tonerweb.no. Always be helpful, concise, and stay on topic. Do not invent products.
+Use code with caution.
+File Structure:
+index.html: Standard HTML boilerplate with Tailwind CSS linked.
+index.tsx: The entry point for the React application.
+App.tsx: The main component that will contain the entire chat application.
+services/geminiService.ts: A dedicated module for all interactions with the Gemini API. This keeps the API logic separate from the UI components.
+components/: A directory for any smaller, reusable UI components you create (e.g., Icons.tsx).
