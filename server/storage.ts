@@ -268,7 +268,9 @@ export class DatabaseStorage implements IStorage {
    * }
    */
   async getSessionMessages(sessionId: number): Promise<Message[]> {
-    return await db.select().from(messages).where(eq(messages.sessionId, sessionId));
+    return await db.select().from(messages)
+      .where(eq(messages.sessionId, sessionId))
+      .orderBy(messages.createdAt);
   }
 }
 

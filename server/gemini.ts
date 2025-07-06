@@ -237,13 +237,12 @@ This will help you find the actual product page URLs to include in your response
 
 User query: ${message}`;
 
-    const response = await ai.models.generateContent({
+    const model = ai.getGenerativeModel({ 
       model: "gemini-2.5-flash",
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
-      contents: fullPrompt,
+      tools: [{ googleSearch: {} }],
     });
+    
+    const response = await model.generateContent(fullPrompt);
 
     return response.text || "I apologize, but I couldn't generate a response. Please try again.";
   } catch (error) {
