@@ -126,18 +126,19 @@ Vær EKSTREMT presis med modellnummer og produkttype.
 
 Svar strukturert på norsk.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { text: prompt },
-            imageData
-          ]
-        }
-      ]
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-2.5-flash"
     });
+    
+    const response = await model.generateContent([
+      {
+        role: "user",
+        parts: [
+          { text: prompt },
+          imageData
+        ]
+      }
+    ]);
 
     const analysisResult = response.text || "Kunne ikke analysere bildet.";
     console.log('Gemini analysis completed');
