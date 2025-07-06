@@ -10,18 +10,9 @@
  * @version 1.0.0
  */
 
-import { GoogleGenAI } from "@google/genai";
 import { geminiClient } from "./ai/clients";
 import { analyzeTonerImage as sharedAnalyzeTonerImage } from "./ai/imageAnalysis";
 import { buildTonerPrompt } from "./ai/prompts";
-
-/**
- * Google Gemini AI client instance.
- * 
- * Initialized with the API key from environment variables.
- * Falls back to empty string if no API key is provided.
- */
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 /**
  * Analyzes uploaded images of toner cartridges, ink cartridges, or office products.
