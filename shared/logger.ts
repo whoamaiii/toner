@@ -48,7 +48,7 @@ export const logger = {
   },
   
   /**
-   * Info logging - only shown in development mode (fixed for production performance)
+   * Info logging - suppressed in production for performance
    * @param message - The log message
    * @param data - Optional data to log
    */
