@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@shared/logger";
 
 /**
@@ -19,7 +19,7 @@ import { logger } from "@shared/logger";
  * Initialized with the API key from environment variables.
  * Falls back to empty string if no API key is provided.
  */
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 /**
  * Analyzes uploaded images of toner cartridges, ink cartridges, or office products.
@@ -128,20 +128,12 @@ Vær EKSTREMT presis med modellnummer og produkttype.
 Svar strukturert på norsk.`;
 
     const model = ai.getGenerativeModel({ 
-      model: "gemini-2.5-flash"
+      model: "gemini-2.0-flash-exp"
     });
     
-    const response = await model.generateContent([
-      {
-        role: "user",
-        parts: [
-          { text: prompt },
-          imageData
-        ]
-      }
-    ]);
+    const response = await model.generateContent([prompt, imageData]);
 
-    const analysisResult = response.text || "Kunne ikke analysere bildet.";
+    const analysisResult = response.response.text() || "Kunne ikke analysere bildet.";
     logger.debug('Gemini analysis completed');
     return analysisResult;
   } catch (error) {
@@ -240,13 +232,12 @@ This will help you find the actual product page URLs to include in your response
 User query: ${message}`;
 
     const model = ai.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
-      tools: [{ googleSearch: {} }],
+      model: "gemini-2.0-flash-exp"
     });
     
     const response = await model.generateContent(fullPrompt);
 
-    return response.text || "I apologize, but I couldn't generate a response. Please try again.";
+    return response.response.text() || "I apologize, but I couldn't generate a response. Please try again.";
   } catch (error) {
     logger.error('Gemini API Error', error);
     throw error;

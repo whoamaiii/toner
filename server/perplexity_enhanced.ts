@@ -1,6 +1,8 @@
 import OpenAI from "openai";
 import { analyzeTonerImage } from "./gemini";
 import { logger } from "@shared/logger";
+import { generateCacheKey, getCachedSearchResult, cacheSearchResult } from "./cache";
+import crypto from "crypto";
 
 // Initialize OpenRouter client with Perplexity Sonar model
 const openai = new OpenAI({
@@ -13,6 +15,14 @@ const openai = new OpenAI({
 });
 
 export async function searchTonerWebProducts(message: string, mode: string, image?: string): Promise<string> {
+  const imageHash = image ? crypto.createHash('md5').update(image).digest('hex') : undefined;
+  const cacheKey = generateCacheKey(message, mode, imageHash);
+  
+  const cachedResult = getCachedSearchResult(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
   logger.debug('searchTonerWebProducts called', { message: message.substring(0, 50) + '...', mode, hasImage: !!image });
   logger.debug('API Key present', { hasKey: !!(globalThis as any).process?.env?.OPENROUTER_API_KEY });
   
@@ -215,11 +225,11 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
     logger.debug('Making API request to OpenRouter');
     
     const completion = await openai.chat.completions.create({
-      model: "perplexity/sonar-pro",
+      model: "perplexity/sonar-reasoning-pro",
       messages: [
         {
           role: "system",
-          content: systemPrompt
+          content: `Current date and time: ${new Date().toISOString()}\n\n${systemPrompt}`
         },
         {
           role: "user",
@@ -227,11 +237,15 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
         }
       ],
       temperature: 0.2,
-      max_tokens: 2000,
+      max_tokens: 4000, // Increased for CoT responses
     });
 
     logger.debug('API response received');
-    return completion.choices[0]?.message?.content || "Jeg kunne ikke finne spesifikke produkter. Vennligst prøv igjen.";
+    const responseContent = completion.choices[0]?.message?.content || "Jeg kunne ikke finne spesifikke produkter. Vennligst prøv igjen.";
+    
+    cacheSearchResult(cacheKey, responseContent);
+    
+    return responseContent;
   } catch (error) {
     logger.error('Perplexity Search Error', error);
     throw error;

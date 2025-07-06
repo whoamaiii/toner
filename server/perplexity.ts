@@ -17,6 +17,8 @@
 import OpenAI from "openai";
 import { analyzeTonerImage } from "./gemini";
 import { logger } from "@shared/logger";
+import { generateCacheKey, getCachedSearchResult, cacheSearchResult } from "./cache";
+import crypto from "crypto";
 
 /**
  * OpenAI client configured to use Perplexity's Sonar model through OpenRouter.
@@ -76,6 +78,14 @@ const openai = new OpenAI({
  * @throws {Error} When API request fails or image analysis fails
  */
 export async function searchTonerWebProducts(message: string, mode: string, image?: string): Promise<string> {
+  const imageHash = image ? crypto.createHash('md5').update(image).digest('hex') : undefined;
+  const cacheKey = generateCacheKey(message, mode, imageHash);
+  
+  const cachedResult = getCachedSearchResult(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
   logger.debug('searchTonerWebProducts called', { message: message.substring(0, 50) + '...', mode, hasImage: !!image });
   logger.debug('API Key present', { hasKey: !!(globalThis as any).process?.env?.OPENROUTER_API_KEY });
   
@@ -256,7 +266,7 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
       messages: [
         {
           role: "system",
-          content: systemPrompt
+          content: `Current date and time: ${new Date().toISOString()}\n\n${systemPrompt}`
         },
         {
           role: "user",
@@ -268,7 +278,11 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
     });
 
     logger.debug('API response received');
-    return completion.choices[0]?.message?.content || "Jeg kunne ikke finne spesifikke produkter. Vennligst prøv igjen.";
+    const responseContent = completion.choices[0]?.message?.content || "Jeg kunne ikke finne spesifikke produkter. Vennligst prøv igjen.";
+    
+    cacheSearchResult(cacheKey, responseContent);
+    
+    return responseContent;
   } catch (error) {
     logger.error('Perplexity Search Error', error);
     

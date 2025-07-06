@@ -20,6 +20,9 @@ import { insertChatSessionSchema, insertMessageSchema } from "@shared/schema";
 import { searchTonerWebProducts } from "./perplexity";
 import { logger } from "@shared/logger";
 import { isFeatureEnabled, getFeatureMessage } from "@shared/features";
+import { classifyQuery, shouldUseClaude, shouldUsePerplexity, shouldUseUnifiedReasoning } from "./query_classifier";
+import { analyzeComplexQuery } from "./claude_reasoning";
+import { logSearchEvent, logErrorEvent, addAnalyticsEndpoint } from "./analytics";
 
 /**
  * Interface for AI chat requests.
@@ -86,6 +89,9 @@ function validateSessionId(id: string): number {
  */
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Add analytics endpoints
+  addAnalyticsEndpoint(app);
+
   // Health check endpoint
   app.get("/api/health", async (req, res) => {
     try {
@@ -108,13 +114,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Quick test of Gemini API
       if (process.env.GEMINI_API_KEY) {
         try {
-          const { GoogleGenAI } = await import("@google/genai");
-          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-          const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: [{ role: "user", parts: [{ text: "Hello" }] }]
-          });
-          health.apis.gemini.status = response.text ? "ok" : "error";
+          const { GoogleGenerativeAI } = await import("@google/generative-ai");
+          const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+          const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+          const response = await model.generateContent("Hello");
+          health.apis.gemini.status = response.response.text() ? "ok" : "error";
         } catch (error) {
           health.apis.gemini.status = "error";
         }
@@ -181,17 +185,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * }
    */
   app.post("/api/ai/chat", async (req, res) => {
+    const startTime = Date.now();
     logger.debug('AI Chat endpoint called', { hasBody: !!req.body });
+    
+    let message: string, mode: string, image: string | undefined;
+    
     try {
-      const { message, mode, image } = aiRequestSchema.parse(req.body);
+      const parsedBody = aiRequestSchema.parse(req.body);
+      message = parsedBody.message;
+      mode = parsedBody.mode;
+      image = parsedBody.image;
+      
       logger.debug('Parsed request', { message: message.substring(0, 100) + '...', mode, hasImage: !!image });
       
+      const classification = classifyQuery(message, !!image);
+      logger.debug('Query classification', classification);
+      
       let response;
+      let modelUsed = 'unknown';
+      let cacheHit = false;
+
       try {
-        response = await searchTonerWebProducts(message, mode, image);
-        logger.debug('Response received from searchTonerWebProducts');
+        if (shouldUseUnifiedReasoning(classification)) {
+          modelUsed = 'Sonar-Reasoning-Pro';
+          response = await searchTonerWebProducts(message, mode, image);
+        } else if (shouldUsePerplexity(classification) && !shouldUseClaude(classification)) {
+          modelUsed = 'Perplexity';
+          response = await searchTonerWebProducts(message, mode, image);
+        } else if (shouldUseClaude(classification) && !shouldUsePerplexity(classification)) {
+          modelUsed = 'Claude';
+          response = await analyzeComplexQuery(message, undefined, image);
+        } else if (classification.strategy === 'search-then-reason') {
+          modelUsed = 'Perplexity+Claude';
+          const searchResults = await searchTonerWebProducts(message, mode, image);
+          response = await analyzeComplexQuery(message, searchResults, image);
+        } else {
+          modelUsed = 'Perplexity (default)';
+          response = await searchTonerWebProducts(message, mode, image);
+        }
+        
+        logSearchEvent({
+          query: message,
+          mode,
+          hasImage: !!image,
+          classification,
+          responseTime: Date.now() - startTime,
+          success: true,
+          cacheHit, // This needs to be properly implemented in search/reasoning functions
+          modelUsed,
+          responseLength: response.length
+        });
+        
+        res.json({ content: response });
+        
       } catch (aiError) {
-        logger.error('Error in searchTonerWebProducts', aiError);
+        logErrorEvent(aiError, 'AI Processing');
+        logSearchEvent({
+          query: message,
+          mode,
+          hasImage: !!image,
+          classification,
+          responseTime: Date.now() - startTime,
+          success: false,
+          cacheHit: false,
+          modelUsed,
+          responseLength: 0
+        });
+        
         return res.status(500).json({ 
           message: 'AI service temporarily unavailable',
           error: 'The AI service is experiencing issues. Please try again later.',
@@ -199,7 +259,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.json({ content: response });
     } catch (error: unknown) {
       logger.error('AI Chat Error', error);
       
@@ -413,7 +472,3 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
-
-
-
-

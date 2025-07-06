@@ -1,8 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@shared/logger";
 
 // Initialize Gemini with your API key
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function analyzeTonerImage(imageBase64: string): Promise<string> {
   try {
@@ -83,20 +83,11 @@ Vær EKSTREMT presis med modellnummer og produkttype.
 
 Svar strukturert på norsk.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { text: prompt },
-            imageData
-          ]
-        }
-      ]
-    });
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const response = await model.generateContent([prompt, imageData]);
 
-    const analysisResult = response.text || "Kunne ikke analysere bildet.";
+    const analysisResult = response.response.text() || "Kunne ikke analysere bildet.";
     logger.debug('Gemini analysis completed');
     return analysisResult;
   } catch (error) {
@@ -228,15 +219,11 @@ Dette vil hjelpe deg med å finne faktiske produktside-URL-er å inkludere i sva
 
 Brukerens spørsmål: ${message}`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
-      contents: fullPrompt,
-    });
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const response = await model.generateContent(fullPrompt);
 
-    return response.text || "Beklager, jeg kunne ikke generere et svar. Vennligst prøv igjen.";
+    return response.response.text() || "Beklager, jeg kunne ikke generere et svar. Vennligst prøv igjen.";
   } catch (error) {
     logger.error('Gemini API Error', error);
     throw error;

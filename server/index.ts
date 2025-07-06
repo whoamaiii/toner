@@ -74,16 +74,14 @@ async function validateGeminiApiKey(): Promise<boolean> {
   }
 
   try {
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const { GoogleGenerativeAI } = await import("@google/generative-ai");
+    const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     
     // Test with a simple text generation
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ role: "user", parts: [{ text: "Hello" }] }]
-    });
+    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const response = await model.generateContent("Hello");
     
-    return !!response.text;
+    return !!response.response.text();
   } catch (error) {
     log(`Gemini API key validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;
