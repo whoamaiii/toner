@@ -22,6 +22,8 @@ import { Message } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import React, { memo, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 /**
  * Props interface for the ChatMessages component.
@@ -32,6 +34,78 @@ import remarkGfm from 'remark-gfm';
 interface ChatMessagesProps {
   messages: Message[];
 }
+
+/*
+ * Memoised row component so React only re-renders a message when its props
+ * actually change. This is important when combined with virtualization.
+ */
+const MessageRow = memo(function MessageRow({ message, handleAction }: { message: Message; handleAction: (a: string, c?: string) => void }) {
+  return (
+    <div
+      className={`flex items-start space-x-4 p-6 rounded-xl ${
+        message.role === 'assistant'
+          ? 'bg-gray-900/50 border border-gray-800'
+          : 'bg-purple-500/10 border border-purple-500/20'
+      }`}
+    >
+      {/* Avatar */}
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          message.role === 'assistant'
+            ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/20'
+            : 'bg-purple-500/20'
+        }`}
+      >
+        {message.role === 'assistant' ? <Zap className="h-5 w-5 text-white" /> : <span className="text-sm text-purple-400 font-medium">U</span>}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1">
+        {message.role === 'assistant' ? (
+          <div className="text-gray-200">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({ href, children }: any) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline transition-colors">
+                    {children}
+                  </a>
+                ),
+                p: ({ children }: any) => <p className="mb-3">{children}</p>,
+                ul: ({ children }: any) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
+                ol: ({ children }: any) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
+                li: ({ children }: any) => <li className="ml-2">{children}</li>,
+                strong: ({ children }: any) => <strong className="font-semibold text-white">{children}</strong>,
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <div className="text-gray-300 whitespace-pre-wrap">{message.content}</div>
+        )}
+
+        {/* Actions for assistant messages */}
+        {message.role === 'assistant' && (
+          <div className="flex items-center space-x-4 mt-4">
+            <Button variant="ghost" size="icon" className="grok-text-secondary hover:grok-text" onClick={() => handleAction('like')}>
+              <ThumbsUp className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="grok-text-secondary hover:grok-text" onClick={() => handleAction('dislike')}>
+              <ThumbsDown className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="grok-text-secondary hover:grok-text" onClick={() => handleAction('copy', message.content)}>
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="grok-text-secondary hover:grok-text" onClick={() => handleAction('share')}>
+              <Share2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
 /**
  * ChatMessages component that displays a list of chat messages with interactive features.
@@ -65,179 +139,37 @@ interface ChatMessagesProps {
  */
 export default function ChatMessages({ messages }: ChatMessagesProps) {
   const { toast } = useToast();
+  const parentRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Handles user actions on messages (copy, like, dislike, share).
-   * 
-   * This function provides a centralized handler for all message actions:
-   * - **Copy**: Copies message content to clipboard
-   * - **Like/Dislike**: Placeholder for feedback collection
-   * - **Share**: Placeholder for sharing functionality
-   * 
-   * @param {string} action - The action to perform ('copy', 'like', 'dislike', 'share')
-   * @param {string} [content] - Optional content for copy action
-   * 
-   * @example
-   * // Copy message content
-   * handleAction('copy', 'Message content here');
-   * 
-   * // Like a message
-   * handleAction('like');
-   */
   const handleAction = (action: string, content?: string) => {
     if (action === 'copy' && content) {
       navigator.clipboard.writeText(content);
-      toast({
-        title: 'Copied to clipboard',
-        description: 'Message content has been copied.',
-      });
+      toast({ title: 'Copied to clipboard', description: 'Message content has been copied.' });
     } else {
-      toast({
-        title: `${action} action`,
-        description: `${action} feature is coming soon!`,
-      });
+      toast({ title: `${action} action`, description: `${action} feature is coming soon!` });
     }
   };
 
+  // Virtualiser setup
+  const rowVirtualizer = useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 180, // average row height
+    overscan: 5,
+  });
+
   return (
-    <div className="space-y-4">
-      {messages.map((message) => (
-        <div key={message.id} className={`flex items-start space-x-4 p-6 rounded-xl ${
-          message.role === 'assistant' 
-            ? 'bg-gray-900/50 border border-gray-800' 
-            : 'bg-purple-500/10 border border-purple-500/20'
-        }`}>
-          {/* Message Avatar */}
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-            message.role === 'assistant'
-              ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/20'
-              : 'bg-purple-500/20'
-          }`}>
-            {message.role === 'assistant' ? (
-              <Zap className="h-5 w-5 text-white" />
-            ) : (
-              <span className="text-sm text-purple-400 font-medium">U</span>
-            )}
-          </div>
-          
-          {/* Message Content */}
-          <div className="flex-1">
-            {message.role === 'assistant' ? (
-              <div className="text-gray-200">
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    /**
-                     * Custom link component for external URLs.
-                     * 
-                     * Ensures all links open in new tabs for security and UX.
-                     * 
-                     * @param {Object} props - Link props
-                     * @param {string} props.href - The link URL
-                     * @param {React.ReactNode} props.children - Link content
-                     * @returns {JSX.Element} Styled external link
-                     */
-                    a: ({ href, children }) => (
-                      <a 
-                        href={href} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                      >
-                        {children}
-                      </a>
-                    ),
-                    /**
-                     * Custom paragraph component with proper spacing.
-                     * 
-                     * @param {Object} props - Paragraph props
-                     * @param {React.ReactNode} props.children - Paragraph content
-                     * @returns {JSX.Element} Styled paragraph
-                     */
-                    p: ({ children }) => <p className="mb-3">{children}</p>,
-                    /**
-                     * Custom unordered list component.
-                     * 
-                     * @param {Object} props - List props
-                     * @param {React.ReactNode} props.children - List content
-                     * @returns {JSX.Element} Styled unordered list
-                     */
-                    ul: ({ children }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
-                    /**
-                     * Custom ordered list component.
-                     * 
-                     * @param {Object} props - List props
-                     * @param {React.ReactNode} props.children - List content
-                     * @returns {JSX.Element} Styled ordered list
-                     */
-                    ol: ({ children }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
-                    /**
-                     * Custom list item component.
-                     * 
-                     * @param {Object} props - List item props
-                     * @param {React.ReactNode} props.children - List item content
-                     * @returns {JSX.Element} Styled list item
-                     */
-                    li: ({ children }) => <li className="ml-2">{children}</li>,
-                    /**
-                     * Custom strong/bold text component.
-                     * 
-                     * @param {Object} props - Strong text props
-                     * @param {React.ReactNode} props.children - Strong text content
-                     * @returns {JSX.Element} Styled strong text
-                     */
-                    strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
-              </div>
-            ) : (
-              <div className="text-gray-300 whitespace-pre-wrap">
-                {message.content}
-              </div>
-            )}
-            
-            {/* Action Buttons for Assistant Messages */}
-            {message.role === 'assistant' && (
-              <div className="flex items-center space-x-4 mt-4">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="grok-text-secondary hover:grok-text"
-                  onClick={() => handleAction('like')}
-                >
-                  <ThumbsUp className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="grok-text-secondary hover:grok-text"
-                  onClick={() => handleAction('dislike')}
-                >
-                  <ThumbsDown className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="grok-text-secondary hover:grok-text"
-                  onClick={() => handleAction('copy', message.content)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="grok-text-secondary hover:grok-text"
-                  onClick={() => handleAction('share')}
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
+    <div ref={parentRef} className="h-full overflow-y-auto">
+      <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          const message = messages[virtualRow.index];
+          return (
+            <div key={message.id} style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)` }}>
+              <MessageRow message={message} handleAction={handleAction} />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
