@@ -4,8 +4,8 @@
  * This service provides a clean interface for communicating with the AI backend
  * and handles all API interactions including:
  * - Chat/search requests with text and image support
- * - Image generation (placeholder)
- * - News fetching (placeholder)
+ * - Image generation (coming soon)
+ * - News fetching (coming soon)
  * - Error handling and response parsing
  * - HTTP request management
  * 
@@ -15,6 +15,8 @@
  * @author TonerWeb Team
  * @version 1.0.0
  */
+
+import { isFeatureEnabled, getFeatureMessage } from "@shared/features";
 
 /**
  * Interface for AI API responses.
@@ -173,47 +175,83 @@ class AIService {
   /**
    * Generates an image based on a text prompt.
    * 
-   * This method is a placeholder for future image generation functionality.
-   * It will be implemented to generate product images, promotional materials,
+   * This method provides a graceful fallback for image generation functionality.
+   * When the feature is enabled, it will generate product images, promotional materials,
    * or visual content based on text descriptions.
    * 
    * @param {string} prompt - Text description for image generation
-   * @returns {Promise<string>} Generated image URL or base64 data
-   * 
-   * @throws {Error} Currently always throws as feature is not implemented
+   * @returns {Promise<string>} Feature status message or generated image URL
    * 
    * @example
-   * // Future implementation
-   * const imageUrl = await aiService.generateImage('Canon PG-540 ink cartridge');
-   * 
-   * @todo Implement image generation functionality
+   * const response = await aiService.generateImage('Canon PG-540 ink cartridge');
+   * // Returns: "AI image generation is coming soon! We're working on..."
    */
   async generateImage(prompt: string): Promise<string> {
-    // Placeholder for image generation
-    throw new Error('Image generation not implemented yet');
+    if (isFeatureEnabled('imageGeneration')) {
+      // TODO: Implement actual image generation when feature is enabled
+      try {
+        const response = await fetch('/api/ai/generate-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ prompt }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Image generation request failed');
+        }
+        
+        const data = await response.json();
+        return data.imageUrl || data.message;
+      } catch (error) {
+        console.error('Image generation error:', error);
+        return 'Sorry, image generation is temporarily unavailable. Please try again later.';
+      }
+    } else {
+      return getFeatureMessage('imageGeneration');
+    }
   }
 
   /**
    * Fetches the latest news related to printing, toner, or technology.
    * 
-   * This method is a placeholder for future news fetching functionality.
-   * It will be implemented to provide relevant news articles, product updates,
+   * This method provides a graceful fallback for news fetching functionality.
+   * When the feature is enabled, it will provide relevant news articles, product updates,
    * or industry information.
    * 
    * @param {string} [query] - Optional search query to filter news
-   * @returns {Promise<NewsArticle[]>} Array of news articles with metadata
-   * 
-   * @throws {Error} Currently always throws as feature is not implemented
+   * @returns {Promise<NewsArticle[]>} Array of news articles or empty array with status message
    * 
    * @example
-   * // Future implementation
    * const news = await aiService.getLatestNews('printer technology');
-   * 
-   * @todo Implement news fetching functionality
+   * // Returns: [] (empty array when feature is not enabled)
    */
   async getLatestNews(query?: string): Promise<NewsArticle[]> {
-    // Placeholder for news fetching
-    throw new Error('News fetching not implemented yet');
+    if (isFeatureEnabled('newsFeeds')) {
+      // TODO: Implement actual news fetching when feature is enabled
+      try {
+        const response = await fetch(`/api/ai/news${query ? `?query=${encodeURIComponent(query)}` : ''}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('News fetching request failed');
+        }
+        
+        const data = await response.json();
+        return data.articles || [];
+      } catch (error) {
+        console.error('News fetching error:', error);
+        return [];
+      }
+    } else {
+      // Return empty array - UI can check feature status separately
+      return [];
+    }
   }
 }
 

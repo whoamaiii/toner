@@ -11,6 +11,7 @@
  */
 
 import { GoogleGenAI } from "@google/genai";
+import { logger } from "@shared/logger";
 
 /**
  * Google Gemini AI client instance.
@@ -48,7 +49,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
  */
 export async function analyzeTonerImage(imageBase64: string): Promise<string> {
   try {
-    console.log('Analyzing printer cartridge image with Gemini Vision...');
+    logger.debug('Analyzing printer cartridge image with Gemini Vision');
     
     const mimeTypeMatch = imageBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
     if (!mimeTypeMatch || !mimeTypeMatch[1]) {
@@ -141,10 +142,10 @@ Svar strukturert på norsk.`;
     ]);
 
     const analysisResult = response.text || "Kunne ikke analysere bildet.";
-    console.log('Gemini analysis completed');
+    logger.debug('Gemini analysis completed');
     return analysisResult;
   } catch (error) {
-    console.error('Gemini Vision Analysis Error:', error);
+    logger.error('Gemini Vision Analysis Error', error);
     if (error instanceof Error && error.message.includes('API key not valid')) {
       return "Feil: Gemini API-nøkkelen er ugyldig. Vennligst sjekk .env-filen.";
     }
@@ -247,7 +248,7 @@ User query: ${message}`;
 
     return response.text || "I apologize, but I couldn't generate a response. Please try again.";
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    logger.error('Gemini API Error', error);
     throw error;
   }
 }
