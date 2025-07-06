@@ -12,6 +12,8 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { logger } from "@shared/logger";
+import { getServiceHealth, getServiceStatusMessage } from "@shared/service-validator";
 
 const app = express();
 
@@ -69,19 +71,43 @@ app.use((req, res, next) => {
  * Self-executing async function that initializes the server.
  * 
  * This function:
- * - Validates required environment variables
+ * - Validates required environment variables and service health
  * - Registers API routes
  * - Sets up error handling middleware
  * - Configures development/production serving
  * - Starts the server on port 3000
  */
 (async () => {
-  // Validate required environment variables
-  if (!process.env.GEMINI_API_KEY) {
-    log("WARNING: GEMINI_API_KEY is not set in .env file. Image analysis will fail.");
-  }
-  if (!process.env.OPENROUTER_API_KEY) {
-    log("WARNING: OPENROUTER_API_KEY is not set in .env file. Text-based search will fail.");
+  // Comprehensive service validation
+  const serviceHealth = getServiceHealth();
+  const statusMessage = getServiceStatusMessage();
+  
+  if (serviceHealth.healthy) {
+    logger.info('All services operational', {
+      available: serviceHealth.available,
+      total: serviceHealth.total
+    });
+  } else {
+    logger.warn('Some services are unavailable', {
+      available: serviceHealth.available,
+      total: serviceHealth.total,
+      message: statusMessage
+    });
+    
+    // Log detailed service status
+    serviceHealth.services.forEach(service => {
+      if (service.available) {
+        logger.info(`✅ ${service.name}: ${service.message}`);
+      } else {
+        logger.warn(`❌ ${service.name}: ${service.message}`);
+      }
+    });
+    
+    // Provide guidance for missing services
+    if (!serviceHealth.healthy) {
+      logger.info('Server will start with limited functionality');
+      logger.info('To enable all features, configure missing API keys in .env file');
+    }
   }
   
   // Register all API routes
@@ -91,6 +117,7 @@ app.use((req, res, next) => {
    * Global error handling middleware.
    * 
    * Catches all errors thrown in route handlers and returns appropriate HTTP responses.
+   * Uses proper logging instead of console.error.
    * 
    * @param err - The error object (can be any type)
    * @param _req - Express request object (unused)
@@ -106,8 +133,13 @@ app.use((req, res, next) => {
       res.status(status).json({ message });
     }
     
-    // Log error instead of throwing to prevent server crash
-    console.error('Error handled by global error middleware:', err);
+    // Log error with proper logging instead of console.error
+    logger.error('Error handled by global error middleware', {
+      status,
+      message,
+      stack: err.stack,
+      name: err.name
+    });
   });
 
   // Configure serving based on environment

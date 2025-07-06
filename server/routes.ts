@@ -18,6 +18,8 @@ import { z } from "zod";
 import { storage } from "./storage";
 import { insertChatSessionSchema, insertMessageSchema } from "@shared/schema";
 import { searchTonerWebProducts } from "./perplexity";
+import { logger } from "@shared/logger";
+import { isFeatureEnabled, getFeatureMessage } from "@shared/features";
 
 /**
  * Interface for AI chat requests.
@@ -113,17 +115,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * }
    */
   app.post("/api/ai/chat", async (req, res) => {
-    console.log('AI Chat endpoint called with body:', req.body);
+    logger.debug('AI Chat endpoint called', { hasBody: !!req.body });
     try {
       const { message, mode, image } = aiRequestSchema.parse(req.body);
-      console.log('Parsed request:', { message, mode, hasImage: !!image });
+      logger.debug('Parsed request', { message: message.substring(0, 100) + '...', mode, hasImage: !!image });
       
       let response;
       try {
         response = await searchTonerWebProducts(message, mode, image);
-        console.log('Response received from searchTonerWebProducts');
+        logger.debug('Response received from searchTonerWebProducts');
       } catch (aiError) {
-        console.error('Error in searchTonerWebProducts:', aiError);
+        logger.error('Error in searchTonerWebProducts', aiError);
         return res.status(500).json({ 
           message: 'AI service temporarily unavailable',
           error: 'The AI service is experiencing issues. Please try again later.',
@@ -133,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ content: response });
     } catch (error: unknown) {
-      console.error('AI Chat Error:', error);
+      logger.error('AI Chat Error', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           message: 'Invalid request data',
@@ -152,15 +154,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   /**
    * POST /api/ai/generate-image
    * 
-   * Image generation endpoint (placeholder implementation).
+   * Image generation endpoint with feature flag support.
    * 
-   * This endpoint is planned for future implementation to generate
-   * product images or promotional materials.
+   * This endpoint checks if image generation is enabled before processing.
+   * When disabled, it returns a "coming soon" message.
    * 
    * @route POST /api/ai/generate-image
    * @param {Object} req.body - Request body containing the image prompt
    * @param {string} req.body.prompt - Text prompt for image generation
-   * @returns {Object} JSON response with generated image or placeholder message
+   * @returns {Object} JSON response with generated image or feature status message
    */
   app.post("/api/ai/generate-image", async (req, res) => {
     try {
@@ -170,13 +172,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Prompt is required' });
       }
 
-      // Placeholder response for image generation
-      res.json({ 
-        message: 'Image generation feature is coming soon!',
-        prompt 
-      });
+      if (isFeatureEnabled('imageGeneration')) {
+        // TODO: Implement actual image generation when feature is enabled
+        res.json({ 
+          message: 'Image generation is now available!',
+          prompt,
+          imageUrl: 'https://example.com/generated-image.jpg' // Placeholder
+        });
+      } else {
+        res.json({ 
+          message: getFeatureMessage('imageGeneration'),
+          prompt,
+          status: 'coming_soon'
+        });
+      }
     } catch (error) {
-      console.error('Image Generation Error:', error);
+      logger.error('Image Generation Error', error);
       res.status(500).json({ message: 'Failed to generate image' });
     }
   });
@@ -184,26 +195,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   /**
    * GET /api/ai/news
    * 
-   * Latest news endpoint (placeholder implementation).
+   * Latest news endpoint with feature flag support.
    * 
-   * This endpoint is planned for future implementation to fetch
-   * news related to printing, toner products, or technology.
+   * This endpoint checks if news feeds are enabled before processing.
+   * When disabled, it returns a "coming soon" message.
    * 
    * @route GET /api/ai/news
    * @param {string} [query] - Optional query parameter for news filtering
-   * @returns {Object} JSON response with news data or placeholder message
+   * @returns {Object} JSON response with news data or feature status message
    */
   app.get("/api/ai/news", async (req, res) => {
     try {
       const { query } = req.query;
       
-      // Placeholder response for news
-      res.json({
-        message: 'Latest news feature is coming soon!',
-        query: query || 'general'
-      });
+      if (isFeatureEnabled('newsFeeds')) {
+        // TODO: Implement actual news fetching when feature is enabled
+        res.json({
+          message: 'Latest news is now available!',
+          query: query || 'general',
+          articles: [] // Placeholder for actual news articles
+        });
+      } else {
+        res.json({
+          message: getFeatureMessage('newsFeeds'),
+          query: query || 'general',
+          status: 'coming_soon',
+          articles: []
+        });
+      }
     } catch (error) {
-      console.error('News Error:', error);
+      logger.error('News Error', error);
       res.status(500).json({ message: 'Failed to fetch news' });
     }
   });
@@ -226,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const session = await storage.createChatSession(sessionData);
       res.json(session);
     } catch (error) {
-      console.error('Create Session Error:', error);
+      logger.error('Create Session Error', error);
       res.status(500).json({ message: 'Failed to create chat session' });
     }
   });
@@ -249,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(session);
     } catch (error) {
-      console.error('Get Session Error:', error);
+      logger.error('Get Session Error', error);
       if (error instanceof Error && error.message.includes('Invalid session ID')) {
         return res.status(400).json({ message: error.message });
       }
@@ -272,7 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messages = await storage.getSessionMessages(sessionId);
       res.json(messages);
     } catch (error) {
-      console.error('Get Messages Error:', error);
+      logger.error('Get Messages Error', error);
       if (error instanceof Error && error.message.includes('Invalid session ID')) {
         return res.status(400).json({ message: error.message });
       }
@@ -298,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await storage.createMessage(messageData);
       res.json(message);
     } catch (error) {
-      console.error('Create Message Error:', error);
+      logger.error('Create Message Error', error);
       res.status(500).json({ message: 'Failed to create message' });
     }
   });

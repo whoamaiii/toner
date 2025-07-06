@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { analyzeTonerImage } from "./gemini";
+import { logger } from "@shared/logger";
 
 // Initialize OpenRouter client with Perplexity Sonar model
 const openai = new OpenAI({
@@ -12,8 +13,8 @@ const openai = new OpenAI({
 });
 
 export async function searchTonerWebProducts(message: string, mode: string, image?: string): Promise<string> {
-  console.log('searchTonerWebProducts called with:', { message, mode, hasImage: !!image });
-  console.log('API Key present:', !!process.env.OPENROUTER_API_KEY);
+  logger.debug('searchTonerWebProducts called', { message: message.substring(0, 50) + '...', mode, hasImage: !!image });
+  logger.debug('API Key present', { hasKey: !!(globalThis as any).process?.env?.OPENROUTER_API_KEY });
   
   try {
     // First, analyze the image if provided
@@ -21,9 +22,9 @@ export async function searchTonerWebProducts(message: string, mode: string, imag
     if (image) {
       try {
         imageAnalysis = await analyzeTonerImage(image);
-        console.log('Image analysis completed:', imageAnalysis.substring(0, 200) + '...');
+        logger.debug('Image analysis completed', { length: imageAnalysis.length });
       } catch (error) {
-        console.error('Image analysis failed:', error);
+        logger.error('Image analysis failed', error);
         imageAnalysis = "Kunne ikke analysere bildet. Vennligst prøv igjen eller beskriv tonerpatronen manuelt.";
       }
     }
@@ -211,7 +212,7 @@ ${imageAnalysis ? `\n\nBILDANALYSE FRA GEMINI:\n${imageAnalysis}\n\nVIKTIG: Les 
 
 Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du anbefaler. Inkluder klikkbare lenker til hver produktside.`;
 
-    console.log('Making API request to OpenRouter...');
+    logger.debug('Making API request to OpenRouter');
     
     const completion = await openai.chat.completions.create({
       model: "perplexity/sonar-pro",
@@ -229,10 +230,10 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
       max_tokens: 2000,
     });
 
-    console.log('API response received');
+    logger.debug('API response received');
     return completion.choices[0]?.message?.content || "Jeg kunne ikke finne spesifikke produkter. Vennligst prøv igjen.";
   } catch (error) {
-    console.error('Perplexity Search Error:', error);
+    logger.error('Perplexity Search Error', error);
     throw error;
   }
 }
