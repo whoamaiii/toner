@@ -126,18 +126,19 @@ Vær EKSTREMT presis med modellnummer og produkttype.
 
 Svar strukturert på norsk.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { text: prompt },
-            imageData
-          ]
-        }
-      ]
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-2.5-flash"
     });
+    
+    const response = await model.generateContent([
+      {
+        role: "user",
+        parts: [
+          { text: prompt },
+          imageData
+        ]
+      }
+    ]);
 
     const analysisResult = response.text || "Kunne ikke analysere bildet.";
     console.log('Gemini analysis completed');
@@ -237,13 +238,12 @@ This will help you find the actual product page URLs to include in your response
 
 User query: ${message}`;
 
-    const response = await ai.models.generateContent({
+    const model = ai.getGenerativeModel({ 
       model: "gemini-2.5-flash",
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
-      contents: fullPrompt,
+      tools: [{ googleSearch: {} }],
     });
+    
+    const response = await model.generateContent(fullPrompt);
 
     return response.text || "I apologize, but I couldn't generate a response. Please try again.";
   } catch (error) {

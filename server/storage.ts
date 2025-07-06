@@ -16,7 +16,7 @@
 
 import { users, chatSessions, messages, type User, type InsertUser, type ChatSession, type InsertChatSession, type Message, type InsertMessage } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 
 /**
  * Interface defining all storage operations for the TonerWeb AI Assistant.
@@ -268,7 +268,9 @@ export class DatabaseStorage implements IStorage {
    * }
    */
   async getSessionMessages(sessionId: number): Promise<Message[]> {
-    return await db.select().from(messages).where(eq(messages.sessionId, sessionId));
+    return await db.select().from(messages)
+      .where(eq(messages.sessionId, sessionId))
+      .orderBy(asc(messages.createdAt));
   }
 }
 
