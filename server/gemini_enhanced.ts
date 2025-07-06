@@ -16,7 +16,8 @@ export async function analyzeTonerImage(imageBase64: string): Promise<string> {
     
     const mimeTypeMatch = imageBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
     if (!mimeTypeMatch || !mimeTypeMatch[1]) {
-      throw new Error("Could not determine image MIME type from base64 string.");
+      // Return user-friendly error instead of throwing
+      return "Ugyldig bildeformat. Vennligst last opp et gyldig JPEG- eller PNG-bilde.";
     }
     const mimeType = mimeTypeMatch[1];
     
@@ -101,7 +102,7 @@ Svar strukturert på norsk.`;
     if (error instanceof Error && error.message.includes('API key not valid')) {
       return "Feil: Gemini API-nøkkelen er ugyldig. Vennligst sjekk .env-filen.";
     }
-    return `Beklager, en feil oppstod under bildeanalysen: ${error instanceof Error ? error.message : 'Ukjent feil'}`;
+    return `Beklager, en feil oppstod under bildeanalysen. Vennligst prøv igjen med et annet bilde.`;
   }
 }
 

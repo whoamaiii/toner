@@ -13,6 +13,18 @@ interface LogData {
 }
 
 /**
+ * Helper function to safely determine if we're in development mode
+ */
+const isDevelopment = (): boolean => {
+  try {
+    const env = (globalThis as any).process?.env?.NODE_ENV;
+    return env === 'development';
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Logger utility with different log levels.
  * 
  * @example
@@ -30,24 +42,24 @@ export const logger = {
    * @param data - Optional data to log
    */
   debug: (message: string, data?: LogData) => {
-    // Only show debug logs in development mode
-    const isDevelopment = (globalThis as any).process?.env?.NODE_ENV === 'development';
-    if (isDevelopment) {
+    if (isDevelopment()) {
       console.log(`[DEBUG] ${new Date().toISOString()} - ${message}`, data || '');
     }
   },
   
   /**
-   * Info logging - shown in all environments
+   * Info logging - only shown in development mode (fixed for production performance)
    * @param message - The log message
    * @param data - Optional data to log
    */
   info: (message: string, data?: LogData) => {
-    console.log(`[INFO] ${new Date().toISOString()} - ${message}`, data || '');
+    if (isDevelopment()) {
+      console.log(`[INFO] ${new Date().toISOString()} - ${message}`, data || '');
+    }
   },
   
   /**
-   * Warning logging - shown in all environments
+   * Warning logging - shown in all environments (warnings are important)
    * @param message - The log message
    * @param data - Optional data to log
    */
@@ -56,7 +68,7 @@ export const logger = {
   },
   
   /**
-   * Error logging - shown in all environments
+   * Error logging - shown in all environments (errors are critical)
    * @param message - The log message
    * @param error - Optional error object to log
    */
