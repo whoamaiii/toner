@@ -27,12 +27,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { message, mode, image } = aiRequestSchema.parse(req.body);
       console.log('Parsed request:', { message, mode, hasImage: !!image });
       
-      const response = await searchTonerWebProducts(message, mode, image);
-      console.log('Response received from searchTonerWebProducts');
+      let response;
+      try {
+        response = await searchTonerWebProducts(message, mode, image);
+        console.log('Response received from searchTonerWebProducts');
+      } catch (aiError) {
+        console.error('Error in searchTonerWebProducts:', aiError);
+        return res.status(500).json({ 
+          message: 'AI service temporarily unavailable',
+          error: 'The AI service is experiencing issues. Please try again later.',
+          details: aiError instanceof Error ? aiError.message : 'Unknown AI error'
+        });
+      }
       
       res.json({ content: response });
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI Chat Error:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: 'Invalid request data',
+          error: 'Please check your request format',
+          details: error.errors
+        });
+      }
+      
       res.status(500).json({ 
         message: 'Failed to process AI request',
         error: error instanceof Error ? error.message : 'Unknown error'
