@@ -1,8 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@shared/logger";
 
+// Validate API key at startup
+if (!process.env.GEMINI_API_KEY) {
+  logger.error('GEMINI_API_KEY environment variable is required for enhanced Gemini functionality');
+  throw new Error('GEMINI_API_KEY is required');
+}
+
 // Initialize Gemini with your API key
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function analyzeTonerImage(imageBase64: string): Promise<string> {
   try {

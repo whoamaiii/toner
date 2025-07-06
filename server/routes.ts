@@ -147,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(health);
     } catch (error) {
-      console.error('Health check error:', error);
+      logger.error('Health check error', error);
       res.status(500).json({
         status: "error",
         message: "Health check failed",

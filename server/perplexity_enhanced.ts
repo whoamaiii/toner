@@ -4,10 +4,16 @@ import { logger } from "@shared/logger";
 import { generateCacheKey, getCachedSearchResult, cacheSearchResult } from "./cache";
 import crypto from "crypto";
 
+// Validate API key at startup
+if (!process.env.OPENROUTER_API_KEY) {
+  logger.error('OPENROUTER_API_KEY environment variable is required for enhanced Perplexity functionality');
+  throw new Error('OPENROUTER_API_KEY is required');
+}
+
 // Initialize OpenRouter client with Perplexity Sonar model
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY || "",
+  apiKey: process.env.OPENROUTER_API_KEY,
   defaultHeaders: {
     "HTTP-Referer": "https://tonerweb.no", // Optional, for ranking on OpenRouter
     "X-Title": "TonerWeb AI Assistant", // Optional, for ranking on OpenRouter

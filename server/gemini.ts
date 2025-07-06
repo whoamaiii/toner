@@ -13,13 +13,19 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@shared/logger";
 
+// Validate API key at startup
+if (!process.env.GEMINI_API_KEY) {
+  logger.error('GEMINI_API_KEY environment variable is required for Gemini functionality');
+  throw new Error('GEMINI_API_KEY is required');
+}
+
 /**
  * Google Gemini AI client instance.
  * 
  * Initialized with the API key from environment variables.
- * Falls back to empty string if no API key is provided.
+ * Now validates API key at startup for proper error handling.
  */
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /**
  * Analyzes uploaded images of toner cartridges, ink cartridges, or office products.

@@ -20,6 +20,7 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { sql } from "drizzle-orm";
+import { logger } from "@shared/logger";
 
 /**
  * Creates a database connection with proper error handling.
@@ -32,13 +33,13 @@ import { sql } from "drizzle-orm";
 function createDatabaseConnection() {
   try {
     // For local development, use SQLite
-    console.log('Using SQLite for local development');
+    logger.info('Using SQLite for local development');
     const sqlite = new Database("local.db");
     const database = drizzle(sqlite);
     
     return database;
   } catch (error) {
-    console.error('Database connection error:', error);
+    logger.error('Database connection error', error);
     throw error;
   }
 }
@@ -88,7 +89,7 @@ export async function checkDatabaseHealth(): Promise<boolean> {
     db.get(sql`SELECT 1`);
     return true;
   } catch (error) {
-    console.error('Database health check failed:', error);
+    logger.error('Database health check failed', error);
     return false;
   }
 }
