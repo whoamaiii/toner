@@ -117,7 +117,8 @@ class AIService {
       const data = await response.json();
       return data.content;
     } catch (error) {
-      console.error('AI Service Error:', error);
+      // Log error but don't expose sensitive information
+      console.error('AI Service Error:', error instanceof Error ? error.message : 'Unknown error');
       throw error;
     }
   }
@@ -205,7 +206,7 @@ class AIService {
         const data = await response.json();
         return data.imageUrl || data.message;
       } catch (error) {
-        console.error('Image generation error:', error);
+        console.error('Image generation error:', error instanceof Error ? error.message : 'Unknown error');
         return 'Sorry, image generation is temporarily unavailable. Please try again later.';
       }
     } else {
@@ -245,7 +246,7 @@ class AIService {
         const data = await response.json();
         return data.articles || [];
       } catch (error) {
-        console.error('News fetching error:', error);
+        console.error('News fetching error:', error instanceof Error ? error.message : 'Unknown error');
         return [];
       }
     } else {

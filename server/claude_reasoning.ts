@@ -19,6 +19,12 @@ import { logger } from "@shared/logger";
 import { generateCacheKey, getCachedReasoningResult, cacheReasoningResult } from "./cache";
 import crypto from "crypto";
 
+// Validate API key at startup
+if (!process.env.OPENROUTER_API_KEY) {
+  logger.error('OPENROUTER_API_KEY environment variable is required for Claude reasoning functionality');
+  throw new Error('OPENROUTER_API_KEY is required');
+}
+
 /**
  * OpenAI client configured to use Claude 3.5 Sonnet through OpenRouter.
  * 
@@ -29,7 +35,7 @@ import crypto from "crypto";
  */
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY || "",
+  apiKey: process.env.OPENROUTER_API_KEY,
   defaultHeaders: {
     "HTTP-Referer": "https://tonerweb.no",
     "X-Title": "TonerWeb AI Assistant - Claude Reasoning",
