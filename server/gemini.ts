@@ -1,7 +1,101 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize Gemini with your API key
-const ai = new GoogleGenAI({ apiKey: "AIzaSyCHlUphzuYLfs4TXJpftQuTDH1aBQ17rDA" });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
+export async function analyzeTonerImage(imageBase64: string): Promise<string> {
+  try {
+    console.log('Analyzing printer cartridge image with Gemini Vision...');
+    
+    const mimeTypeMatch = imageBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
+    if (!mimeTypeMatch || !mimeTypeMatch[1]) {
+      throw new Error("Could not determine image MIME type from base64 string.");
+    }
+    const mimeType = mimeTypeMatch[1];
+    
+    const imageData = {
+      inlineData: {
+        data: imageBase64.replace(/^data:image\/\w+;base64,/, ''), // Remove data URL prefix
+        mimeType: mimeType
+      }
+    };
+
+    const prompt = `KRITISK OPPGAVE: Identifiser produkt for nøyaktig søk på tonerweb.no
+
+ANALYSER BILDET SVÆRT NØYE:
+
+**1. PRODUKTTYPE** (VIKTIGST!):
+- [ ] BLEKKPATRON (ink cartridge) - væske i patron
+- [ ] TONERPATRON (toner cartridge) - pulver i kassett
+- [ ] KONTORPRODUKT - spesifiser nøyaktig type:
+  - Pennale/etui (pen case)
+  - Notatbok/skrivebok
+  - Perm/ringperm
+  - Skrivesaker
+  - Annet (beskriv)
+
+**2. FOR BLEKK/TONER - EKSTRAKT NØYAKTIG**:
+- MERKE: (Canon, HP, Epson, Brother, Samsung)
+- MODELLNUMMER: Skriv EKSAKT som på produktet
+  - Inkluder XL/XXL hvis det står
+  - Ta med bindestrek (PG-540, ikke PG540)
+  - Noter fargeKODE: BK, C, M, Y, CL
+- ORIGINAL vs KOMPATIBEL: Se etter logo/merking
+- STØRRELSE: Standard, XL, XXL
+- MULTIPACK: Er det flere patroner?
+
+**3. FOR KONTORPRODUKTER**:
+- TYPE: Eksakt produkttype på norsk
+- MERKE: Hvis synlig
+- MATERIALE: Plast, skinn, stoff, metall
+- FARGE/DESIGN: Beskriv utseende
+- STØRRELSE: Hvis mulig å bedømme
+- PRODUKTKODER: Alle synlige tall/koder
+
+**4. ALL SYNLIG TEKST**:
+- Skriv ned ALT du kan se
+- Inkluder små detaljer
+- Se etter:
+  - Produktkoder/SKU
+  - Strekkoder
+  - "Compatible with..."
+  - Merkelogo
+
+**5. SØKEORD FOR TONERWEB**:
+List opp 5-10 mulige søkeord basert på analysen:
+- Norske termer (pennale, ikke pencil case)
+- Varianter av modellnummer
+- Alternative navn
+
+KRITISK: Din identifikasjon avgjør hele søkestrategien!
+Vær EKSTREMT presis med modellnummer og produkttype.
+
+Svar strukturert på norsk.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: prompt },
+            imageData
+          ]
+        }
+      ]
+    });
+
+    const analysisResult = response.text || "Kunne ikke analysere bildet.";
+    console.log('Gemini analysis completed');
+    return analysisResult;
+  } catch (error) {
+    console.error('Gemini Vision Analysis Error:', error);
+    if (error instanceof Error && error.message.includes('API key not valid')) {
+      return "Feil: Gemini API-nøkkelen er ugyldig. Vennligst sjekk .env-filen.";
+    }
+    return `Beklager, en feil oppstod under bildeanalysen: ${error instanceof Error ? error.message : 'Ukjent feil'}`;
+  }
+}
 
 export async function generateTonerWebResponse(message: string, mode: string): Promise<string> {
   try {

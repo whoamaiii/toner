@@ -9,11 +9,13 @@ import { searchTonerWebProducts } from "./perplexity";
 interface AIRequest {
   message: string;
   mode: string;
+  image?: string; // Base64 encoded image
 }
 
 const aiRequestSchema = z.object({
   message: z.string().min(1),
   mode: z.enum(['DeepSearch', 'Think']),
+  image: z.string().optional(), // Base64 encoded image
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -22,10 +24,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/chat", async (req, res) => {
     console.log('AI Chat endpoint called with body:', req.body);
     try {
-      const { message, mode } = aiRequestSchema.parse(req.body);
-      console.log('Parsed request:', { message, mode });
+      const { message, mode, image } = aiRequestSchema.parse(req.body);
+      console.log('Parsed request:', { message, mode, hasImage: !!image });
       
-      const response = await searchTonerWebProducts(message, mode);
+      const response = await searchTonerWebProducts(message, mode, image);
       console.log('Response received from searchTonerWebProducts');
       
       res.json({ content: response });

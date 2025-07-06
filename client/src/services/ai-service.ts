@@ -4,7 +4,7 @@ interface AIResponse {
 }
 
 class AIService {
-  private async callAPI(message: string, mode: string): Promise<string> {
+  private async callAPI(message: string, mode: string, image?: string): Promise<string> {
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -14,6 +14,7 @@ class AIService {
         body: JSON.stringify({
           message,
           mode,
+          image,
         }),
       });
 
@@ -29,8 +30,8 @@ class AIService {
     }
   }
 
-  async sendMessage(message: string, mode: 'DeepSearch' | 'Think'): Promise<string> {
-    return this.callAPI(message, mode);
+  async sendMessage(message: string, mode: 'DeepSearch' | 'Think', image?: string): Promise<string> {
+    return this.callAPI(message, mode, image);
   }
 
   async generateImage(prompt: string): Promise<string> {

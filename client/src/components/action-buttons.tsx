@@ -6,18 +6,26 @@ export default function ActionButtons() {
   const { toast } = useToast();
 
   const exampleQueries = [
-    { query: "Canon PIXMA MG3650S blekk", icon: Image },
-    { query: "HP LaserJet toner", icon: Edit },
-    { query: "Epson EcoTank påfyll", icon: Newspaper },
-    { query: "Brother DCP-L2530DW toner", icon: Users }
+    { query: "Canon PIXMA MG3650S blekk", icon: Edit },
+    { query: "HP LaserJet toner", icon: Newspaper },
+    { query: "Epson EcoTank påfyll", icon: Users },
+    { query: "Last opp tonerbilde for analyse", icon: Image, isImageUpload: true }
   ];
 
-  const handleExampleQuery = (query: string) => {
-    const searchInput = document.querySelector('input[placeholder*="Search for Canon"]') as HTMLInputElement;
-    if (searchInput) {
-      searchInput.value = query;
-      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-      searchInput.focus();
+  const handleExampleQuery = (query: string, isImageUpload?: boolean) => {
+    if (isImageUpload) {
+      // Trigger the file input click
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.click();
+      }
+    } else {
+      const searchInput = document.querySelector('input[placeholder*="Søk etter Canon"]') as HTMLInputElement;
+      if (searchInput) {
+        searchInput.value = query;
+        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+        searchInput.focus();
+      }
     }
   };
 
@@ -30,7 +38,7 @@ export default function ActionButtons() {
             key={index}
             variant="outline"
             className="flex items-center justify-center space-x-2 p-6 bg-gray-900/50 border-gray-800 rounded-xl hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-200 h-auto group"
-            onClick={() => handleExampleQuery(example.query)}
+            onClick={() => handleExampleQuery(example.query, (example as any).isImageUpload)}
           >
             <example.icon className="h-5 w-5 text-purple-400 group-hover:text-purple-300" />
             <span className="text-gray-300 font-medium group-hover:text-white text-sm">{example.query}</span>
