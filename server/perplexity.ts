@@ -14,25 +14,8 @@
  * @version 1.0.0
  */
 
-import OpenAI from "openai";
-import { analyzeTonerImage } from "./gemini";
-
-/**
- * OpenAI client configured to use Perplexity's Sonar model through OpenRouter.
- * 
- * This client is set up to:
- * - Use OpenRouter as the API gateway for Perplexity access
- * - Include proper headers for referral tracking and identification
- * - Authenticate using OpenRouter API key from environment variables
- */
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY || "",
-  defaultHeaders: {
-    "HTTP-Referer": "https://tonerweb.no", // Optional, for ranking on OpenRouter
-    "X-Title": "TonerWeb AI Assistant", // Optional, for ranking on OpenRouter
-  }
-});
+import { openRouterClient as openai } from "./ai/clients";
+import { analyzeTonerImage } from "./ai/imageAnalysis";
 
 /**
  * Main function for searching and recommending products from tonerweb.no.
