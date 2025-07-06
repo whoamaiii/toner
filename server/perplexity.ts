@@ -1,7 +1,30 @@
+/**
+ * Perplexity AI integration for TonerWeb product search and recommendations.
+ * 
+ * This module provides integration with Perplexity's Sonar model via OpenRouter for:
+ * - Advanced product search capabilities on tonerweb.no
+ * - Real-time web search for product availability and pricing
+ * - Intelligent product recommendations based on user queries
+ * - Image analysis integration with Gemini for visual product identification
+ * 
+ * The service uses detailed Norwegian prompts to ensure accurate product matching
+ * and provides structured responses with direct links to tonerweb.no products.
+ * 
+ * @author TonerWeb Team
+ * @version 1.0.0
+ */
+
 import OpenAI from "openai";
 import { analyzeTonerImage } from "./gemini";
 
-// Initialize OpenRouter client with Perplexity Sonar model
+/**
+ * OpenAI client configured to use Perplexity's Sonar model through OpenRouter.
+ * 
+ * This client is set up to:
+ * - Use OpenRouter as the API gateway for Perplexity access
+ * - Include proper headers for referral tracking and identification
+ * - Authenticate using OpenRouter API key from environment variables
+ */
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY || "",
@@ -11,12 +34,52 @@ const openai = new OpenAI({
   }
 });
 
+/**
+ * Main function for searching and recommending products from tonerweb.no.
+ * 
+ * This function combines image analysis (when provided) with intelligent text-based
+ * search to find the most relevant products on tonerweb.no. It uses different
+ * search strategies based on the mode and input type.
+ * 
+ * **Process Flow:**
+ * 1. Analyze uploaded image (if provided) using Gemini Vision
+ * 2. Generate appropriate system prompt based on mode
+ * 3. Combine user query with image analysis results
+ * 4. Send request to Perplexity Sonar for web search
+ * 5. Return structured response with product recommendations
+ * 
+ * **Search Modes:**
+ * - **DeepSearch**: Comprehensive product search with exact URLs, pricing, and availability
+ * - **Think**: Step-by-step analysis with reasoning for product recommendations
+ * 
+ * @param {string} message - User's search query or product description
+ * @param {string} mode - Search mode ('DeepSearch' or 'Think')
+ * @param {string} [image] - Optional base64 encoded image for visual analysis
+ * @returns {Promise<string>} Formatted response with product recommendations and links
+ * 
+ * @example
+ * // Text-only search
+ * const response = await searchTonerWebProducts(
+ *   "Find Canon PG-540 ink cartridge", 
+ *   "DeepSearch"
+ * );
+ * 
+ * @example
+ * // Image-based search
+ * const response = await searchTonerWebProducts(
+ *   "What is this product?", 
+ *   "DeepSearch",
+ *   "data:image/jpeg;base64,/9j/4AAQ..."
+ * );
+ * 
+ * @throws {Error} When API request fails or image analysis fails
+ */
 export async function searchTonerWebProducts(message: string, mode: string, image?: string): Promise<string> {
   console.log('searchTonerWebProducts called with:', { message, mode, hasImage: !!image });
   console.log('API Key present:', !!process.env.OPENROUTER_API_KEY);
   
   try {
-    // First, analyze the image if provided
+    // Analyze image if provided using Gemini Vision
     let imageAnalysis = "";
     if (image) {
       try {
@@ -28,6 +91,20 @@ export async function searchTonerWebProducts(message: string, mode: string, imag
       }
     }
 
+    /**
+     * Generate system prompt based on search mode.
+     * 
+     * **DeepSearch Mode:**
+     * - Provides comprehensive search instructions with tonerweb.no URL structure
+     * - Includes known product IDs and pricing information
+     * - Detailed search strategies for different product types
+     * - Verification rules for URL accuracy
+     * 
+     * **Think Mode:**
+     * - Focuses on step-by-step analysis and reasoning
+     * - Explains product compatibility and alternatives
+     * - Shows decision-making process for recommendations
+     */
     const systemPrompt = mode === 'DeepSearch' 
       ? `Du er TonerWeb AI - ekspert på å finne produkter på tonerweb.no.
 
@@ -151,6 +228,12 @@ ${imageAnalysis ? 'BILDANALYSE: ' + imageAnalysis.substring(0, 150) + '...' : ''
 
 Svar alltid på norsk og vær ærlig om du ikke finner produkter.`;
 
+    /**
+     * Construct the user prompt combining the original message with image analysis.
+     * 
+     * If an image was provided, the analysis is included with emphasis on using
+     * the visual information to guide the search strategy.
+     */
     const userPrompt = `${message}
 
 ${imageAnalysis ? `\n\nBILDANALYSE FRA GEMINI:\n${imageAnalysis}\n\nVIKTIG: Les analysen nøye for å se om dette er BLEKK eller TONER. Søk etter riktig produkttype på tonerweb.no basert på analysen. Fokuser på merke, modellnummer og andre detaljer fra analysen.` : ''}
@@ -159,6 +242,14 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
 
     console.log('Making API request to OpenRouter...');
     
+    /**
+     * Send request to Perplexity Sonar model via OpenRouter.
+     * 
+     * Configuration:
+     * - Model: perplexity/sonar-pro for advanced search capabilities
+     * - Temperature: 0.2 for consistent, factual responses
+     * - Max tokens: 2000 for comprehensive responses
+     */
     const completion = await openai.chat.completions.create({
       model: "perplexity/sonar-pro",
       messages: [
