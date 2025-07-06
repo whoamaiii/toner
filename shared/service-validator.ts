@@ -22,6 +22,17 @@ interface ServiceHealth {
 }
 
 /**
+ * Safe helper function to get environment variables
+ */
+const getEnvVar = (key: string): string | undefined => {
+  try {
+    return (globalThis as any).process?.env?.[key];
+  } catch {
+    return undefined;
+  }
+};
+
+/**
  * Validate the status of all external services.
  * 
  * @returns Array of service status objects
@@ -36,8 +47,8 @@ export const validateServices = (): ServiceStatus[] => {
   const services: ServiceStatus[] = [];
   
   // Get environment variables safely
-  const geminiApiKey = (globalThis as any).process?.env?.GEMINI_API_KEY;
-  const openRouterApiKey = (globalThis as any).process?.env?.OPENROUTER_API_KEY;
+  const geminiApiKey = getEnvVar('GEMINI_API_KEY');
+  const openRouterApiKey = getEnvVar('OPENROUTER_API_KEY');
   
   // Gemini API validation
   services.push({
