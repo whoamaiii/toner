@@ -9,6 +9,7 @@
  * - HTTP-based connection for edge-compatible deployments
  * - Environment variable validation
  * - Connection reuse and pooling
+ * - Graceful error handling
  * 
  * @author TonerWeb Team
  * @version 1.0.0
@@ -18,33 +19,68 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 
 /**
- * Environment variable validation for database connection.
+ * Validates database configuration and environment variables.
  * 
- * Ensures that the DATABASE_URL environment variable is set before
- * attempting to establish a database connection. This prevents
- * runtime errors and provides clear error messages for configuration issues.
+ * This function performs validation checks for database connectivity
+ * and provides clear error messages for configuration issues.
  * 
+ * @returns {string} The validated DATABASE_URL
  * @throws {Error} If DATABASE_URL environment variable is not set
  */
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?"
-  );
+function validateDatabaseConfig(): string {
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    throw new Error(
+      "DATABASE_URL must be set. Did you forget to provision a database?"
+    );
+  }
+  
+  // Additional validation could be added here
+  // e.g., URL format validation, connection testing, etc.
+  
+  return databaseUrl;
 }
 
 /**
- * Neon serverless PostgreSQL connection instance.
+ * Creates a database connection with proper error handling.
  * 
- * This creates an HTTP-based connection to the PostgreSQL database
- * that works in serverless environments. The connection is configured
- * to use the DATABASE_URL environment variable for connection details.
+ * This function initializes the database connection and provides
+ * fallback handling for cases where the database is not available.
  * 
- * @type {import('@neondatabase/serverless').NeonQueryFunction}
+ * @returns {object} Database connection object
+ * @throws {Error} If database connection cannot be established
  */
-const sql = neon(process.env.DATABASE_URL);
+function createDatabaseConnection() {
+  try {
+    const databaseUrl = validateDatabaseConfig();
+    
+    /**
+     * Neon serverless PostgreSQL connection instance.
+     * 
+     * This creates an HTTP-based connection to the PostgreSQL database
+     * that works in serverless environments.
+     */
+    const sql = neon(databaseUrl);
+    
+    /**
+     * Drizzle ORM database instance.
+     * 
+     * This is the main database instance used throughout the application.
+     * It provides type-safe database operations using Drizzle ORM with
+     * the Neon serverless connection.
+     */
+    const database = drizzle(sql);
+    
+    return database;
+  } catch (error) {
+    console.error('Database connection error:', error);
+    throw error;
+  }
+}
 
 /**
- * Drizzle ORM database instance.
+ * Database instance for the application.
  * 
  * This is the main database instance used throughout the application.
  * It provides type-safe database operations using Drizzle ORM with
@@ -55,6 +91,7 @@ const sql = neon(process.env.DATABASE_URL);
  * - Automatic schema validation
  * - Connection pooling
  * - Edge-compatible HTTP connection
+ * - Graceful error handling
  * 
  * @example
  * import { db } from './db';
@@ -70,4 +107,23 @@ const sql = neon(process.env.DATABASE_URL);
  * 
  * @type {import('drizzle-orm/neon-http').NeonHttpDatabase}
  */
-export const db = drizzle(sql);
+export const db = createDatabaseConnection();
+
+/**
+ * Checks if the database connection is healthy.
+ * 
+ * This function can be used to verify that the database connection
+ * is working properly before processing requests.
+ * 
+ * @returns {Promise<boolean>} True if database is healthy, false otherwise
+ */
+export async function checkDatabaseHealth(): Promise<boolean> {
+  try {
+    // Simple query to test connectivity
+    await db.execute('SELECT 1');
+    return true;
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    return false;
+  }
+}

@@ -48,6 +48,32 @@ const aiRequestSchema = z.object({
 });
 
 /**
+ * Zod schema for validating session ID parameters.
+ * 
+ * Ensures that session IDs are positive integers.
+ */
+const sessionIdSchema = z.object({
+  id: z.string().regex(/^\d+$/).transform(Number).refine((n: number) => n > 0, {
+    message: "Session ID must be a positive integer"
+  })
+});
+
+/**
+ * Validates and parses a session ID from route parameters.
+ * 
+ * @param {string} id - The session ID string from route parameters
+ * @returns {number} The validated session ID
+ * @throws {Error} If the ID is invalid
+ */
+function validateSessionId(id: string): number {
+  const result = sessionIdSchema.safeParse({ id });
+  if (!result.success) {
+    throw new Error(`Invalid session ID: ${result.error.errors[0].message}`);
+  }
+  return result.data.id;
+}
+
+/**
  * Registers all API routes with the Express application.
  * 
  * This function sets up all the HTTP endpoints for the application and returns
@@ -106,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json({ content: response });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('AI Chat Error:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({
@@ -216,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.get("/api/chat/sessions/:id", async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = validateSessionId(req.params.id);
       const session = await storage.getChatSession(sessionId);
       if (!session) {
         return res.status(404).json({ message: 'Session not found' });
@@ -224,6 +250,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(session);
     } catch (error) {
       console.error('Get Session Error:', error);
+      if (error instanceof Error && error.message.includes('Invalid session ID')) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: 'Failed to get chat session' });
     }
   });
@@ -239,11 +268,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.get("/api/chat/sessions/:id/messages", async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = validateSessionId(req.params.id);
       const messages = await storage.getSessionMessages(sessionId);
       res.json(messages);
     } catch (error) {
       console.error('Get Messages Error:', error);
+      if (error instanceof Error && error.message.includes('Invalid session ID')) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: 'Failed to get messages' });
     }
   });

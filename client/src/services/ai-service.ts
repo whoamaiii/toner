@@ -29,6 +29,26 @@ interface AIResponse {
 }
 
 /**
+ * Interface for news articles returned by the AI service.
+ * 
+ * @interface NewsArticle
+ * @property {string} title - The article title
+ * @property {string} content - The article content or summary
+ * @property {string} url - The article URL
+ * @property {string} publishedAt - Publication date in ISO format
+ * @property {string} source - The news source name
+ * @property {string[]} [tags] - Optional array of article tags
+ */
+interface NewsArticle {
+  title: string;
+  content: string;
+  url: string;
+  publishedAt: string;
+  source: string;
+  tags?: string[];
+}
+
+/**
  * AI Service class that handles all communication with the AI backend.
  * 
  * This class provides methods for:
@@ -181,7 +201,7 @@ class AIService {
    * or industry information.
    * 
    * @param {string} [query] - Optional search query to filter news
-   * @returns {Promise<any[]>} Array of news articles with metadata
+   * @returns {Promise<NewsArticle[]>} Array of news articles with metadata
    * 
    * @throws {Error} Currently always throws as feature is not implemented
    * 
@@ -191,7 +211,7 @@ class AIService {
    * 
    * @todo Implement news fetching functionality
    */
-  async getLatestNews(query?: string): Promise<any[]> {
+  async getLatestNews(query?: string): Promise<NewsArticle[]> {
     // Placeholder for news fetching
     throw new Error('News fetching not implemented yet');
   }
