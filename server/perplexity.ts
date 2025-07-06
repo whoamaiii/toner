@@ -271,6 +271,49 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
     return completion.choices[0]?.message?.content || "Jeg kunne ikke finne spesifikke produkter. Vennligst prøv igjen.";
   } catch (error) {
     logger.error('Perplexity Search Error', error);
-    throw error;
+    
+    // Handle specific error types
+    if (error instanceof Error) {
+      // OpenRouter authentication errors
+      if (error.message.includes('401') || error.message.includes('No auth credentials')) {
+        return "⚠️ **API-konfigurasjonsfeil**: OpenRouter API-nøkkelen er ugyldig eller utløpt.\n\n" +
+               "**Løsning**:\n" +
+               "1. Gå til https://openrouter.ai/keys\n" +
+               "2. Generer en ny API-nøkkel\n" +
+               "3. Oppdater OPENROUTER_API_KEY i .env-filen\n" +
+               "4. Start serveren på nytt\n\n" +
+               "**Midlertidig løsning**: Prøv å beskrive produktet med tekst i stedet for bilde.";
+      }
+      
+      // Rate limiting errors
+      if (error.message.includes('429') || error.message.includes('rate limit')) {
+        return "⏱️ **For mange forespørsler**: API-grensen er nådd.\n\n" +
+               "Vennligst vent et øyeblikk før du prøver igjen.";
+      }
+      
+      // Network errors
+      if (error.message.includes('ECONNREFUSED') || error.message.includes('fetch failed')) {
+        return "🌐 **Nettverksfeil**: Kan ikke nå API-tjenesten.\n\n" +
+               "Sjekk internettforbindelsen og prøv igjen.";
+      }
+      
+      // Gemini API errors
+      if (error.message.includes('API key not valid')) {
+        return "🔑 **Gemini API-feil**: API-nøkkelen er ugyldig.\n\n" +
+               "**Løsning**:\n" +
+               "1. Gå til https://aistudio.google.com/app/apikey\n" +
+               "2. Generer en ny API-nøkkel\n" +
+               "3. Oppdater GEMINI_API_KEY i .env-filen\n" +
+               "4. Start serveren på nytt";
+      }
+    }
+    
+    // Generic error message for unknown errors
+    return "❌ **Ukjent feil oppstod**: Kunne ikke behandle forespørselen.\n\n" +
+           "**Prøv følgende**:\n" +
+           "• Beskriv produktet med tekst i stedet for bilde\n" +
+           "• Sjekk internettforbindelsen\n" +
+           "• Kontakt support hvis problemet vedvarer\n\n" +
+           `**Teknisk info**: ${error instanceof Error ? error.message : 'Ukjent feil'}`;
   }
 }

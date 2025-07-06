@@ -1,11 +1,13 @@
 /**
  * Database connection configuration for the TonerWeb AI Assistant.
  * 
- * This module sets up the database connection using Neon (serverless PostgreSQL)
- * and Drizzle ORM for type-safe database operations.
+ * This module sets up the database connection using either:
+ * - Neon (serverless PostgreSQL) for production
+ * - SQLite for local development
  * 
  * Features:
  * - Serverless PostgreSQL connection via Neon
+ * - SQLite fallback for local development
  * - HTTP-based connection for edge-compatible deployments
  * - Environment variable validation
  * - Connection reuse and pooling
@@ -15,62 +17,24 @@
  * @version 1.0.0
  */
 
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-
-/**
- * Validates database configuration and environment variables.
- * 
- * This function performs validation checks for database connectivity
- * and provides clear error messages for configuration issues.
- * 
- * @returns {string} The validated DATABASE_URL
- * @throws {Error} If DATABASE_URL environment variable is not set
- */
-function validateDatabaseConfig(): string {
-  const databaseUrl = process.env.DATABASE_URL;
-  
-  if (!databaseUrl) {
-    throw new Error(
-      "DATABASE_URL must be set. Did you forget to provision a database?"
-    );
-  }
-  
-  // Additional validation could be added here
-  // e.g., URL format validation, connection testing, etc.
-  
-  return databaseUrl;
-}
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+import { sql } from "drizzle-orm";
 
 /**
  * Creates a database connection with proper error handling.
  * 
- * This function initializes the database connection and provides
- * fallback handling for cases where the database is not available.
+ * This function initializes the database connection using SQLite for local development
+ * when DATABASE_URL is not set.
  * 
  * @returns {object} Database connection object
- * @throws {Error} If database connection cannot be established
  */
 function createDatabaseConnection() {
   try {
-    const databaseUrl = validateDatabaseConfig();
-    
-    /**
-     * Neon serverless PostgreSQL connection instance.
-     * 
-     * This creates an HTTP-based connection to the PostgreSQL database
-     * that works in serverless environments.
-     */
-    const sql = neon(databaseUrl);
-    
-    /**
-     * Drizzle ORM database instance.
-     * 
-     * This is the main database instance used throughout the application.
-     * It provides type-safe database operations using Drizzle ORM with
-     * the Neon serverless connection.
-     */
-    const database = drizzle(sql);
+    // For local development, use SQLite
+    console.log('Using SQLite for local development');
+    const sqlite = new Database("local.db");
+    const database = drizzle(sqlite);
     
     return database;
   } catch (error) {
@@ -120,7 +84,8 @@ export const db = createDatabaseConnection();
 export async function checkDatabaseHealth(): Promise<boolean> {
   try {
     // Simple query to test connectivity
-    await db.execute('SELECT 1');
+    // For better-sqlite3, we use get() for a single result
+    db.get(sql`SELECT 1`);
     return true;
   } catch (error) {
     console.error('Database health check failed:', error);

@@ -86,6 +86,72 @@ function validateSessionId(id: string): number {
  */
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      const health = {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        apis: {
+          gemini: {
+            configured: !!process.env.GEMINI_API_KEY,
+            status: "unknown"
+          },
+          openrouter: {
+            configured: !!process.env.OPENROUTER_API_KEY,
+            status: "unknown"
+          }
+        }
+      };
+      
+      // Quick test of Gemini API
+      if (process.env.GEMINI_API_KEY) {
+        try {
+          const { GoogleGenAI } = await import("@google/genai");
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text: "Hello" }] }]
+          });
+          health.apis.gemini.status = response.text ? "ok" : "error";
+        } catch (error) {
+          health.apis.gemini.status = "error";
+        }
+      }
+      
+      // Quick test of OpenRouter API
+      if (process.env.OPENROUTER_API_KEY) {
+        try {
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "perplexity/sonar-pro",
+              messages: [{ role: "user", content: "Hello" }],
+              max_tokens: 10
+            })
+          });
+          health.apis.openrouter.status = response.ok ? "ok" : "error";
+        } catch (error) {
+          health.apis.openrouter.status = "error";
+        }
+      }
+      
+      res.json(health);
+    } catch (error) {
+      console.error('Health check error:', error);
+      res.status(500).json({
+        status: "error",
+        message: "Health check failed",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
   /**
    * POST /api/ai/chat
    * 
@@ -136,6 +202,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ content: response });
     } catch (error: unknown) {
       logger.error('AI Chat Error', error);
+      
+      // Handle Zod validation errors
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           message: 'Invalid request data',
@@ -144,8 +212,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.status(500).json({ 
-        message: 'Failed to process AI request',
+      // Handle specific error types
+      let statusCode = 500;
+      let errorMessage = 'Failed to process AI request';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('401') || error.message.includes('No auth credentials')) {
+          statusCode = 401;
+          errorMessage = 'API authentication failed';
+        } else if (error.message.includes('429')) {
+          statusCode = 429;
+          errorMessage = 'Rate limit exceeded';
+        } else if (error.message.includes('ECONNREFUSED')) {
+          statusCode = 503;
+          errorMessage = 'Service unavailable';
+        }
+      }
+      
+      res.status(statusCode).json({ 
+        message: errorMessage,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

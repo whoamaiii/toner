@@ -202,9 +202,24 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
         role: 'assistant'
       });
     } catch (error) {
-      // Handle errors with user-friendly message
+      console.error('Search error:', error);
+      
+      // Try to get more specific error information
+      let errorMessage = 'Beklager, jeg støtte på en feil under behandling av forespørselen din. Vennligst prøv igjen.';
+      
+      if (error instanceof Error) {
+        // If it's a fetch error with more details, try to extract them
+        if (error.message.includes('401')) {
+          errorMessage = '🔑 **API-konfigurasjonsfeil**: Kan ikke koble til AI-tjenesten. Vennligst kontakt support.';
+        } else if (error.message.includes('429')) {
+          errorMessage = '⏱️ **For mange forespørsler**: Vennligst vent et øyeblikk før du prøver igjen.';
+        } else if (error.message.includes('503')) {
+          errorMessage = '🌐 **Tjenesten er ikke tilgjengelig**: Prøv igjen om litt.';
+        }
+      }
+      
       addMessage({
-        content: 'Beklager, jeg støtte på en feil under behandling av forespørselen din. Vennligst prøv igjen.',
+        content: errorMessage,
         role: 'assistant'
       });
     } finally {

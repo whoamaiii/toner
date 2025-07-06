@@ -67,6 +67,87 @@ app.use((req, res, next) => {
   next();
 });
 
+// API Key validation functions
+async function validateGeminiApiKey(): Promise<boolean> {
+  if (!process.env.GEMINI_API_KEY) {
+    return false;
+  }
+
+  try {
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    
+    // Test with a simple text generation
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: "Hello" }] }]
+    });
+    
+    return !!response.text;
+  } catch (error) {
+    log(`Gemini API key validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return false;
+  }
+}
+
+async function validateOpenRouterApiKey(): Promise<boolean> {
+  if (!process.env.OPENROUTER_API_KEY) {
+    return false;
+  }
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "perplexity/sonar-pro",
+        messages: [{ role: "user", content: "Hello" }],
+        max_tokens: 10
+      })
+    });
+
+    if (response.status === 401) {
+      const errorData = await response.json();
+      log(`OpenRouter API key validation failed: ${errorData.error?.message || 'Authentication failed'}`);
+      return false;
+    }
+
+    return response.ok;
+  } catch (error) {
+    log(`OpenRouter API key validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return false;
+  }
+}
+
+async function validateApiKeys(): Promise<void> {
+  log("Validating API keys...");
+  
+  const geminiValid = await validateGeminiApiKey();
+  const openRouterValid = await validateOpenRouterApiKey();
+  
+  if (!geminiValid) {
+    log("❌ GEMINI_API_KEY is missing or invalid. Image analysis will fail.");
+    log("   Get your key from: https://aistudio.google.com/app/apikey");
+  } else {
+    log("✅ GEMINI_API_KEY is valid");
+  }
+  
+  if (!openRouterValid) {
+    log("❌ OPENROUTER_API_KEY is missing or invalid. Text-based search will fail.");
+    log("   Get your key from: https://openrouter.ai/keys");
+  } else {
+    log("✅ OPENROUTER_API_KEY is valid");
+  }
+  
+  if (!geminiValid || !openRouterValid) {
+    log("⚠️  Some API keys are invalid. The application may not work properly.");
+    log("   Please check your .env file and restart the server.");
+  }
+}
+
 /**
  * Self-executing async function that initializes the server.
  * 
@@ -78,6 +159,9 @@ app.use((req, res, next) => {
  * - Starts the server on port 3000
  */
 (async () => {
+  // Validate API keys before starting server
+  await validateApiKeys();
+  
   // Comprehensive service validation
   const serviceHealth = getServiceHealth();
   const statusMessage = getServiceStatusMessage();
@@ -159,6 +243,6 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
   }, () => {
-    log(`serving on port ${port}`);
+    log(`🚀 Server running on port ${port}`);
   });
 })();
