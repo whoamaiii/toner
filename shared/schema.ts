@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, jsonb, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -10,7 +10,7 @@ export const users = pgTable("users", {
 
 export const chatSessions = pgTable("chat_sessions", {
   id: serial("id").primaryKey(),
-  userId: serial("user_id").references(() => users.id),
+  userId: integer("user_id").references(() => users.id),
   title: text("title"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -18,7 +18,7 @@ export const chatSessions = pgTable("chat_sessions", {
 
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  sessionId: serial("session_id").references(() => chatSessions.id),
+  sessionId: integer("session_id").references(() => chatSessions.id),
   content: text("content").notNull(),
   role: text("role").notNull(), // 'user' or 'assistant'
   metadata: jsonb("metadata"), // For storing additional data like sources, mode, etc.
