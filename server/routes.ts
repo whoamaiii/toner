@@ -23,6 +23,14 @@ import { isFeatureEnabled, getFeatureMessage } from "@shared/features";
 import { classifyQuery, shouldUseClaude, shouldUsePerplexity, shouldUseUnifiedReasoning } from "./query_classifier";
 import { analyzeComplexQuery } from "./claude_reasoning";
 import { logSearchEvent, logErrorEvent, addAnalyticsEndpoint } from "./analytics";
+import { sendErrorResponse, asyncHandler, globalErrorHandler } from "./error-handler";
+import { 
+  rateLimiter, 
+  validateTextInput, 
+  validateImageInput, 
+  securityHeaders,
+  requestTimeout 
+} from "./middleware/security";
 
 /**
  * Interface for AI chat requests.
@@ -293,116 +301,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *   "content": "Found Canon PG-540 ink cartridge on tonerweb.no..."
    * }
    */
-  app.post("/api/ai/chat", async (req, res) => {
+  app.post("/api/ai/chat", 
+    securityHeaders,
+    rateLimiter,
+    requestTimeout(),
+    validateTextInput(),
+    validateImageInput,
+    asyncHandler(async (req, res) => {
     const startTime = Date.now();
     logger.debug('AI Chat endpoint called', { hasBody: !!req.body });
     
-    let message: string, mode: string, image: string | undefined;
+    const parsedBody = aiRequestSchema.parse(req.body);
+    const { message, mode, image } = parsedBody;
     
-    try {
-      const parsedBody = aiRequestSchema.parse(req.body);
-      message = parsedBody.message;
-      mode = parsedBody.mode;
-      image = parsedBody.image;
-      
-      logger.debug('Parsed request', { message: message.substring(0, 100) + '...', mode, hasImage: !!image });
-      
-      const classification = classifyQuery(message, !!image);
-      logger.debug('Query classification', classification);
-      
-      let response;
-      let modelUsed = 'unknown';
-      let cacheHit = false;
+    logger.debug('Parsed request', { message: message.substring(0, 100) + '...', mode, hasImage: !!image });
+    
+    const classification = classifyQuery(message, !!image);
+    logger.debug('Query classification', classification);
+    
+    let response: string;
+    let modelUsed = 'unknown';
+    let cacheHit = false;
 
-      try {
-        if (shouldUseUnifiedReasoning(classification)) {
-          modelUsed = 'Sonar-Reasoning-Pro';
-          response = await searchTonerWebProducts(message, mode, image);
-        } else if (shouldUsePerplexity(classification) && !shouldUseClaude(classification)) {
-          modelUsed = 'Perplexity';
-          response = await searchTonerWebProducts(message, mode, image);
-        } else if (shouldUseClaude(classification) && !shouldUsePerplexity(classification)) {
-          modelUsed = 'Claude';
-          response = await analyzeComplexQuery(message, undefined, image);
-        } else if (classification.strategy === 'search-then-reason') {
-          modelUsed = 'Perplexity+Claude';
-          const searchResults = await searchTonerWebProducts(message, mode, image);
-          response = await analyzeComplexQuery(message, searchResults, image);
-        } else {
-          modelUsed = 'Perplexity (default)';
-          response = await searchTonerWebProducts(message, mode, image);
-        }
-        
-        logSearchEvent({
-          query: message,
-          mode,
-          hasImage: !!image,
-          classification,
-          responseTime: Date.now() - startTime,
-          success: true,
-          cacheHit, // This needs to be properly implemented in search/reasoning functions
-          modelUsed,
-          responseLength: response.length
-        });
-        
-        res.json({ content: response });
-        
-      } catch (aiError) {
-        logErrorEvent(aiError, 'AI Processing');
-        logSearchEvent({
-          query: message,
-          mode,
-          hasImage: !!image,
-          classification,
-          responseTime: Date.now() - startTime,
-          success: false,
-          cacheHit: false,
-          modelUsed,
-          responseLength: 0
-        });
-        
-        return res.status(500).json({ 
-          message: 'AI service temporarily unavailable',
-          error: 'The AI service is experiencing issues. Please try again later.',
-          details: aiError instanceof Error ? aiError.message : 'Unknown AI error'
-        });
+    try {
+      if (shouldUseUnifiedReasoning(classification)) {
+        modelUsed = 'Sonar-Reasoning-Pro';
+        response = await searchTonerWebProducts(message, mode, image);
+      } else if (shouldUsePerplexity(classification) && !shouldUseClaude(classification)) {
+        modelUsed = 'Perplexity';
+        response = await searchTonerWebProducts(message, mode, image);
+      } else if (shouldUseClaude(classification) && !shouldUsePerplexity(classification)) {
+        modelUsed = 'Claude';
+        response = await analyzeComplexQuery(message, undefined, image);
+      } else if (classification.strategy === 'search-then-reason') {
+        modelUsed = 'Perplexity+Claude';
+        const searchResults = await searchTonerWebProducts(message, mode, image);
+        response = await analyzeComplexQuery(message, searchResults, image);
+      } else {
+        modelUsed = 'Perplexity (default)';
+        response = await searchTonerWebProducts(message, mode, image);
       }
       
-    } catch (error: unknown) {
-      logger.error('AI Chat Error', error);
-      
-      // Handle Zod validation errors
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({
-          message: 'Invalid request data',
-          error: 'Please check your request format',
-          details: error.errors
-        });
-      }
-      
-      // Handle specific error types
-      let statusCode = 500;
-      let errorMessage = 'Failed to process AI request';
-      
-      if (error instanceof Error) {
-        if (error.message.includes('401') || error.message.includes('No auth credentials')) {
-          statusCode = 401;
-          errorMessage = 'API authentication failed';
-        } else if (error.message.includes('429')) {
-          statusCode = 429;
-          errorMessage = 'Rate limit exceeded';
-        } else if (error.message.includes('ECONNREFUSED')) {
-          statusCode = 503;
-          errorMessage = 'Service unavailable';
-        }
-      }
-      
-      res.status(statusCode).json({ 
-        message: errorMessage,
-        error: error instanceof Error ? error.message : 'Unknown error'
+      logSearchEvent({
+        query: message,
+        mode,
+        hasImage: !!image,
+        classification,
+        responseTime: Date.now() - startTime,
+        success: true,
+        cacheHit,
+        modelUsed,
+        responseLength: response.length
       });
+      
+      res.json({ content: response });
+      
+    } catch (aiError) {
+      logErrorEvent(aiError, 'AI Processing');
+      logSearchEvent({
+        query: message,
+        mode,
+        hasImage: !!image,
+        classification,
+        responseTime: Date.now() - startTime,
+        success: false,
+        cacheHit: false,
+        modelUsed,
+        responseLength: 0
+      });
+      
+      // Re-throw to be handled by centralized error handler
+      throw aiError;
     }
-  });
+  }));
 
   /**
    * POST /api/ai/generate-image

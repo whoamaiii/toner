@@ -11,22 +11,18 @@
 
 import NodeCache from "node-cache";
 import { logger } from "@shared/logger";
+import crypto from "crypto";
+import { CONFIG } from "./config";
 
-// Cache configuration
+// Use centralized cache configuration
 const CACHE_CONFIG = {
-  // Standard TTL for cached items (in seconds)
-  // 1 hour for search results, 15 minutes for reasoning
-  searchTTL: 3600, // 1 hour
-  reasoningTTL: 900, // 15 minutes
-  
-  // Check for expired items every 5 minutes
-  checkperiod: 300,
-  
-  // Allow cloning of cached values to prevent mutation
-  useClones: true,
-  
-  // Max number of keys in cache
-  maxKeys: 500
+  searchTTL: CONFIG.cache.SEARCH_TTL,
+  reasoningTTL: CONFIG.cache.REASONING_TTL,
+  checkperiod: CONFIG.cache.CHECK_PERIOD,
+  useClones: CONFIG.cache.USE_CLONES,
+  maxKeys: CONFIG.cache.MAX_KEYS,
+  maxKeyLength: CONFIG.cache.MAX_KEY_LENGTH,
+  maxQueryLength: CONFIG.cache.MAX_QUERY_LENGTH,
 };
 
 // Create separate caches for different data types
@@ -53,10 +49,25 @@ const reasoningCache = new NodeCache({
  * @returns {string} A unique cache key
  */
 export function generateCacheKey(query: string, mode: string, imageHash?: string): string {
-  let key = `q:${query}|m:${mode}`;
+  // Escape special characters and limit length using configuration
+  const sanitizedQuery = query.replace(/[\|:]/g, '_').substring(0, CACHE_CONFIG.maxQueryLength);
+  const sanitizedMode = mode.replace(/[\|:]/g, '_');
+  
+  // Create a hash of the full query for uniqueness
+  const queryHash = crypto.createHash('md5').update(query).digest('hex').substring(0, 8);
+  
+  let key = `q:${sanitizedQuery}|h:${queryHash}|m:${sanitizedMode}`;
   if (imageHash) {
     key += `|i:${imageHash}`;
   }
+  
+  // Ensure key doesn't exceed configured length limit
+  if (key.length > CACHE_CONFIG.maxKeyLength) {
+    // If too long, use only hashes
+    const fullHash = crypto.createHash('md5').update(`${query}|${mode}|${imageHash || ''}`).digest('hex');
+    key = `hash:${fullHash}`;
+  }
+  
   return key;
 }
 
