@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import type { Express } from "express";
+import type { Express, Request, Response as ExpressResponse } from "express-serve-static-core";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage";
@@ -93,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   addAnalyticsEndpoint(app);
 
   // Health check endpoint
-  app.get("/api/health", async (req, res) => {
+  app.get("/api/health", async (_req: Request, res: ExpressResponse) => {
     try {
       const health = {
         status: "ok",
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             signal: AbortSignal.timeout(4000)
           });
           
-          const response = await Promise.race([healthCheckPromise, timeoutPromise]) as Response;
+          const response = await Promise.race([healthCheckPromise, timeoutPromise]) as globalThis.Response;
           health.apis.openrouter.status = response.ok ? "ok" : "error";
         } catch (error) {
           health.apis.openrouter.status = "error";

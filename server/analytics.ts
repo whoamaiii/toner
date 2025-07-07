@@ -10,6 +10,7 @@
 
 import { logger } from "@shared/logger";
 import { getCacheStats } from "./cache";
+import type { Request, Response } from "express-serve-static-core";
 
 interface SearchEvent {
   timestamp: number;
@@ -133,19 +134,19 @@ export function getRecentErrors(limit: number = 20): any[] {
  * @param {any} app - The Express app instance
  */
 export function addAnalyticsEndpoint(app: any): void {
-  app.get("/api/analytics", (req: any, res: any) => {
+  app.get("/api/analytics", (_req: Request, res: Response) => {
     res.json({
       summary: getAnalyticsSummary(),
       cacheStats: getCacheStats()
     });
   });
   
-  app.get("/api/analytics/searches", (req: any, res: any) => {
+  app.get("/api/analytics/searches", (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     res.json(getRecentSearches(limit));
   });
   
-  app.get("/api/analytics/errors", (req: any, res: any) => {
+  app.get("/api/analytics/errors", (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     res.json(getRecentErrors(limit));
   });
