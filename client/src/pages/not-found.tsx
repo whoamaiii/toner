@@ -1,6 +1,17 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
+/**
+ * Generic 404 NotFound page.
+ *
+ * Displays a simple card informing the user that the requested page does not
+ * exist. Intended to be used as a catch-all route in the React router.
+ *
+ * @component
+ * @example
+ * <NotFound />
+ */
+
 export default function NotFound() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">

@@ -2,6 +2,19 @@ import { useState } from 'react';
 import ChatInterface from '@/components/chat-interface';
 import { Message, ChatState } from '@/types/chat';
 
+/**
+ * Home page for the TonerWeb AI Assistant.
+ *
+ * Serves as the root view that hosts the `ChatInterface` component along with
+ * chat state management helpers. All chat messages and typing indicators are
+ * delegated to nested components so that this page remains lean.
+ *
+ * @component
+ * @example
+ * // Rendered by the React router at path "/"
+ * <Home />
+ */
+
 export default function Home() {
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],

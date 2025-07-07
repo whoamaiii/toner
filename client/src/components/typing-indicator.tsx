@@ -1,5 +1,24 @@
 import { Zap } from 'lucide-react';
 
+/**
+ * TypingIndicator component for the TonerWeb AI Assistant.
+ *
+ * Displays an animated status bar indicating that the AI assistant is currently
+ * searching tonerweb.no or processing the user's request. The component is purely
+ * presentational and does not maintain any local state.
+ *
+ * Visual Elements:
+ * - Gradient lightning icon with pulse animation
+ * - Descriptive text informing the user of ongoing search
+ * - Three bouncing dots with staggered delays to mimic typing activity
+ *
+ * Tailwind CSS utilities are used for layout, animation, and color styles.
+ *
+ * @component
+ * @example
+ * <TypingIndicator />
+ */
+
 export default function TypingIndicator() {
   return (
     <div className="mt-4">
