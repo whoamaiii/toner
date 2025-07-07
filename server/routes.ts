@@ -111,23 +111,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
       
-      // Quick test of Gemini API
+      // Quick test of Gemini API with timeout
       if (process.env.GEMINI_API_KEY) {
         try {
-          const { GoogleGenerativeAI } = await import("@google/generative-ai");
-          const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-          const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-          const response = await model.generateContent("Hello");
-          health.apis.gemini.status = response.response.text() ? "ok" : "error";
+          // Set timeout for health check
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Health check timeout')), 5000);
+          });
+          
+          const healthCheckPromise = (async () => {
+            const { GoogleGenerativeAI } = await import("@google/generative-ai");
+            const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+            const response = await model.generateContent("Hello");
+            return response.response.text() ? "ok" : "error";
+          })();
+          
+          health.apis.gemini.status = await Promise.race([healthCheckPromise, timeoutPromise]);
         } catch (error) {
           health.apis.gemini.status = "error";
+          logger.debug('Gemini health check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
       }
       
-      // Quick test of OpenRouter API
+      // Quick test of OpenRouter API with timeout
       if (process.env.OPENROUTER_API_KEY) {
         try {
-          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          // Set timeout for health check
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Health check timeout')), 5000);
+          });
+          
+          const healthCheckPromise = fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -137,11 +152,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               model: "perplexity/sonar-pro",
               messages: [{ role: "user", content: "Hello" }],
               max_tokens: 10
-            })
+            }),
+            // Add request timeout
+            signal: AbortSignal.timeout(4000)
           });
+          
+          const response = await Promise.race([healthCheckPromise, timeoutPromise]);
           health.apis.openrouter.status = response.ok ? "ok" : "error";
         } catch (error) {
           health.apis.openrouter.status = "error";
+          logger.debug('OpenRouter health check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
       }
       

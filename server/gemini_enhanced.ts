@@ -1,18 +1,39 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@shared/logger";
 
-// Validate API key at startup
-if (!process.env.GEMINI_API_KEY) {
-  logger.error('GEMINI_API_KEY environment variable is required for enhanced Gemini functionality');
-  throw new Error('GEMINI_API_KEY is required');
-}
+/**
+ * Google Gemini AI client instance for enhanced functionality.
+ * 
+ * Initialized with the API key from environment variables.
+ * API key validation is now done at runtime for graceful degradation.
+ */
+let ai: GoogleGenerativeAI | null = null;
 
-// Initialize Gemini with your API key
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+/**
+ * Initializes the Gemini AI client if API key is available.
+ * 
+ * @returns {GoogleGenerativeAI | null} The initialized AI client or null if no API key
+ */
+function getGeminiClient(): GoogleGenerativeAI | null {
+  if (!process.env.GEMINI_API_KEY) {
+    return null;
+  }
+  
+  if (!ai) {
+    ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  
+  return ai;
+}
 
 export async function analyzeTonerImage(imageBase64: string): Promise<string> {
   try {
     logger.debug('Analyzing printer cartridge image with Gemini Vision');
+    
+    const ai = getGeminiClient();
+    if (!ai) {
+      return "Gemini bildeanalyse er ikke tilgjengelig. Vennligst sjekk API-konfigurasjonen.";
+    }
     
     const mimeTypeMatch = imageBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
     if (!mimeTypeMatch || !mimeTypeMatch[1]) {
@@ -173,6 +194,11 @@ Din produktidentifikasjon avgjør hele søkestrategien på tonerweb.no!
 
 export async function generateTonerWebResponse(message: string, mode: string): Promise<string> {
   try {
+    const ai = getGeminiClient();
+    if (!ai) {
+      throw new Error('Gemini API er ikke tilgjengelig. Vennligst sjekk API-konfigurasjonen.');
+    }
+    
     const systemPrompt = mode === 'DeepSearch' 
       ? `Du er TonerWeb AI Assistant - spesialisert produktassistent for tonerweb.no, en norsk nettbutikk som selger skriverforbruk og kontorrekvisita. Ditt hovedmål er å hjelpe kunder med å finne riktige produkter tilgjengelig på tonerweb.no.
 

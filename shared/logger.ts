@@ -25,7 +25,22 @@ const isDevelopment = (): boolean => {
 };
 
 /**
- * Logger utility with different log levels.
+ * Helper function to safely determine if we're in production mode
+ */
+const isProduction = (): boolean => {
+  try {
+    const env = (globalThis as any).process?.env?.NODE_ENV;
+    return env === 'production';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Production-safe logging utility with environment-aware log levels.
+ * 
+ * In production, logs are formatted as JSON for structured logging systems.
+ * In development, logs are human-readable console output.
  * 
  * @example
  * import { logger } from '@shared/logger';
@@ -45,34 +60,73 @@ export const logger = {
     if (isDevelopment()) {
       console.log(`[DEBUG] ${new Date().toISOString()} - ${message}`, data || '');
     }
+    // In production, debug logs are completely suppressed for performance
   },
   
   /**
-   * Info logging - suppressed in production for performance
+   * Info logging - development console, production structured logging
    * @param message - The log message
    * @param data - Optional data to log
    */
   info: (message: string, data?: LogData) => {
     if (isDevelopment()) {
       console.log(`[INFO] ${new Date().toISOString()} - ${message}`, data || '');
+    } else if (isProduction()) {
+      // In production, use structured JSON logging for log aggregation systems
+      const logEntry = {
+        level: 'info',
+        timestamp: new Date().toISOString(),
+        message,
+        data: data || null
+      };
+      // Write to stdout for log aggregation systems to capture
+      process.stdout.write(JSON.stringify(logEntry) + '\n');
     }
   },
   
   /**
-   * Warning logging - shown in all environments (warnings are important)
+   * Warning logging - shown in all environments with structured format in production
    * @param message - The log message
    * @param data - Optional data to log
    */
   warn: (message: string, data?: LogData) => {
-    console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, data || '');
+    if (isDevelopment()) {
+      console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, data || '');
+    } else if (isProduction()) {
+      // In production, use structured JSON logging
+      const logEntry = {
+        level: 'warn',
+        timestamp: new Date().toISOString(),
+        message,
+        data: data || null
+      };
+      // Write to stderr for warnings
+      process.stderr.write(JSON.stringify(logEntry) + '\n');
+    }
   },
   
   /**
-   * Error logging - shown in all environments (errors are critical)
+   * Error logging - shown in all environments with structured format in production
    * @param message - The log message
    * @param error - Optional error object to log
    */
   error: (message: string, error?: any) => {
-    console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error || '');
+    if (isDevelopment()) {
+      console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error || '');
+    } else if (isProduction()) {
+      // In production, use structured JSON logging with error serialization
+      const logEntry = {
+        level: 'error',
+        timestamp: new Date().toISOString(),
+        message,
+        error: error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : null
+      };
+      // Write to stderr for errors
+      process.stderr.write(JSON.stringify(logEntry) + '\n');
+    }
   }
 };

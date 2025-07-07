@@ -13,19 +13,30 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@shared/logger";
 
-// Validate API key at startup
-if (!process.env.GEMINI_API_KEY) {
-  logger.error('GEMINI_API_KEY environment variable is required for Gemini functionality');
-  throw new Error('GEMINI_API_KEY is required');
-}
-
 /**
  * Google Gemini AI client instance.
  * 
  * Initialized with the API key from environment variables.
- * Now validates API key at startup for proper error handling.
+ * API key validation is now done at runtime for graceful degradation.
  */
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+let ai: GoogleGenerativeAI | null = null;
+
+/**
+ * Initializes the Gemini AI client if API key is available.
+ * 
+ * @returns {GoogleGenerativeAI | null} The initialized AI client or null if no API key
+ */
+function getGeminiClient(): GoogleGenerativeAI | null {
+  if (!process.env.GEMINI_API_KEY) {
+    return null;
+  }
+  
+  if (!ai) {
+    ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  
+  return ai;
+}
 
 /**
  * Analyzes uploaded images of toner cartridges, ink cartridges, or office products.
@@ -56,6 +67,11 @@ const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 export async function analyzeTonerImage(imageBase64: string): Promise<string> {
   try {
     logger.debug('Analyzing printer cartridge image with Gemini Vision');
+    
+    const ai = getGeminiClient();
+    if (!ai) {
+      return "Gemini bildeanalyse er ikke tilgjengelig. Vennligst sjekk API-konfigurasjonen.";
+    }
     
     const mimeTypeMatch = imageBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
     if (!mimeTypeMatch || !mimeTypeMatch[1]) {
@@ -185,6 +201,11 @@ Svar strukturert på norsk.`;
  */
 export async function generateTonerWebResponse(message: string, mode: string): Promise<string> {
   try {
+    const ai = getGeminiClient();
+    if (!ai) {
+      throw new Error('Gemini API er ikke tilgjengelig. Vennligst sjekk API-konfigurasjonen.');
+    }
+    
     const systemPrompt = mode === 'DeepSearch' 
       ? `You are the TonerWeb AI Assistant, a specialized product assistant for tonerweb.no - an e-commerce store that sells printer toners and supplies. Your primary goal is to help customers find the correct products available on tonerweb.no.
 
