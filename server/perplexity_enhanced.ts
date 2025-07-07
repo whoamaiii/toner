@@ -66,9 +66,9 @@ export async function searchTonerWebProducts(message: string, mode: string, imag
 13. **HOBBY OG FRITID** - Hobbyartikler
 
 **🔍 TONERWEB.NO URL-STRUKTUR:**
-- Produktsider: `https://tonerweb.no/pv.php?pid=XXXXX`
-- Søk: `https://tonerweb.no/search.php?query=XXX`
-- Generiske søk: `site:tonerweb.no [søkeord]`
+- Produktsider: https://tonerweb.no/pv.php?pid=XXXXX
+- Søk: https://tonerweb.no/search.php?query=XXX
+- Generiske søk: site:tonerweb.no [søkeord]
 
 **🗣️ NORSK TERMINOLOGI (kun bekreftet):**
 
@@ -93,19 +93,19 @@ export async function searchTonerWebProducts(message: string, mode: string, imag
 **🎯 SØKESTRATEGI (forsiktig tilnærming):**
 
 **FOR BLEKK/TONER:**
-1. `site:tonerweb.no "[merke] [modellnummer]"`
-2. `site:tonerweb.no "blekk" "[merke]"`
-3. `site:tonerweb.no "toner" "[merke]"`
+1. site:tonerweb.no "[merke] [modellnummer]"
+2. site:tonerweb.no "blekk" "[merke]"
+3. site:tonerweb.no "toner" "[merke]"
 
 **FOR KONTORPRODUKTER:**
-1. `site:tonerweb.no "kontorprodukter" "[produkttype]"`
-2. `site:tonerweb.no "[produkttype]" "[merke]"`
-3. `site:tonerweb.no "[produktnavn]"`
+1. site:tonerweb.no "kontorprodukter" "[produkttype]"
+2. site:tonerweb.no "[produkttype]" "[merke]"
+3. site:tonerweb.no "[produktnavn]"
 
 **FOR ANDRE KATEGORIER:**
-1. `site:tonerweb.no "[kategorinavn]" "[produkttype]"`
-2. `site:tonerweb.no "[produktnavn]"`
-3. `site:tonerweb.no/search.php?query=[søkeord]`
+1. site:tonerweb.no "[kategorinavn]" "[produkttype]"
+2. site:tonerweb.no "[produktnavn]"
+3. site:tonerweb.no/search.php?query=[søkeord]
 
 **VIKTIGE PRINSIPPER:**
 - ALDRI oppfinn URL-strukturer som `/k/kategori/underkategori`
@@ -126,7 +126,7 @@ export async function searchTonerWebProducts(message: string, mode: string, imag
 ❌ **Fant ikke eksakt match for [produkt]**
 
 **Alternative løsninger:**
-1. ** Prøv direkte søk:**
+1. **Prøv direkte søk:**
    - https://tonerweb.no/search.php?query=[søkeord]
 
 2. **📞 Kontakt kundeservice:**
