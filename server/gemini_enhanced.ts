@@ -28,67 +28,132 @@ export async function analyzeTonerImage(imageBase64: string): Promise<string> {
       }
     };
 
-    const prompt = `KRITISK OPPGAVE: Identifiser produkt for nøyaktig søk på tonerweb.no
+    const prompt = `🎯 KRITISK OPPGAVE: Identifiser produkt for søk på tonerweb.no
 
-ANALYSER BILDET SVÆRT NØYE:
+**🏷️ PRODUKTTYPE (basert på faktiske tonerweb.no kategorier):**
 
-**1. PRODUKTTYPE** (VIKTIGST!):
-- [ ] BLEKKPATRON (ink cartridge) - væske i patron
-- [ ] TONERPATRON (toner cartridge) - pulver i kassett
-- [ ] KONTORPRODUKT - spesifiser nøyaktig type:
-  - Pennale/etui (pen case)
-  - Notatbok/skrivebok
-  - Perm/ringperm
-  - Skrivesaker (penner, blyanter, tusjer)
-  - Post-it/selvklebende lapper
-  - Kaffe/kaffekapsel
-  - Annet (beskriv)
+- [ ] BLEKK/TONER (blekkpatroner, tonerpatroner)
+- [ ] KONTORPRODUKTER (penner, post-it, arkivering)
+- [ ] SKOLE OG FORMING (skolemateriell, formprodukter)
+- [ ] TØRK OG RENHOLD (tørkepapir, hansker, desinfeksjon)
+- [ ] EMBALLASJE OG OPPBEVARING (konvolutter, pakkmateriale)
+- [ ] PAPIR (kopipapir, spesialpapir)
+- [ ] HELSE OG SIKKERHET (sikkerhetsutstyr, helseprodukter)
+- [ ] SPISE OG DRIKKE (kaffe, te, kantineprodukter)
+- [ ] WHITEBOARD/MØTEROM (møteromsutstyr)
+- [ ] KONTORMASKINER (maskiner og utstyr)
+- [ ] DATATILBEHØR (batterier, datamaskin-tilbehør)
+- [ ] MOBIL OG NETTBRETT (mobiltelefon og nettbrett-tilbehør)
+- [ ] HOBBY OG FRITID (hobbyartikler)
+- [ ] ANDRE KATEGORIER (spesifiser hvilken tonerweb.no kategori)
 
-**2. FOR BLEKK/TONER - EKSTRAKT NØYAKTIG**:
-- MERKE: (Canon, HP, Epson, Brother, Samsung)
-- MODELLNUMMER: Skriv EKSAKT som på produktet
-  - Inkluder XL/XXL hvis det står
-  - Ta med bindestrek (PG-540, ikke PG540)
-  - Noter fargeKODE: BK, C, M, Y, CL
-- ORIGINAL vs KOMPATIBEL: Se etter logo/merking
-- STØRRELSE: Standard, XL, XXL
-- MULTIPACK: Er det flere patroner?
+**VIKTIG:** Fokuser kun på produkttyper som faktisk finnes på tonerweb.no.
 
-**3. FOR KONTORPRODUKTER**:
-- TYPE: Eksakt produkttype på norsk (kulepenn, post-it, notatbok, etc.)
-- MERKE: Hvis synlig (BIC, Stabilo, Post-it, etc.)
-- MATERIALE: Plast, skinn, stoff, metall
-- FARGE/DESIGN: Beskriv utseende
-- STØRRELSE: Hvis mulig å bedømme
-- PRODUKTKODER: Alle synlige tall/koder
+**2. 🔍 FOR BLEKK/TONER - EKSTRAKT NØYAKTIG:**
+- **MERKE:** Canon, HP, Epson, Brother, Samsung, Xerox
+- **MODELLNUMMER:** Skriv EKSAKT som på etiketten
+  - Behold XL/XXL/L markering
+  - Inkluder bindestrek: PG-540, ikke PG540
+  - Noter fargeKODE: BK (black), C (cyan), M (magenta), Y (yellow), CL (color)
+- **ORIGINAL vs KOMPATIBEL:** Se etter merkelogo/markering
+- **STØRRELSE:** Standard, XL, XXL, L
+- **MULTIPACK:** Antall patroner i pakken
+- **SKRIVERKOMPATIBILITET:** Hvilke skrivermodeller som støttes
 
-**4. FOR KAFFE/DRIKKE**:
-- TYPE: Kaffekapsel, kaffebønner, instant kaffe
-- MERKE: Nespresso, Dolce Gusto, Lavazza, etc.
-- SMAK/VARIANT: Hvis synlig
-- PAKKETSTØRRELSE: Antall kapsler/gram
+**3. 🖊️ FOR KONTORPRODUKTER:**
+- **PRODUKTTYPE:** Presis norsk betegnelse
+  - Kulepenn (ikke ballpoint pen)
+  - Blyant (ikke pencil)
+  - Tusj/Marker (ikke felt-tip pen)
+  - Post-it (ikke sticky notes)
+  - Notatbok (ikke notebook)
+- **MERKE:** BIC, Stabilo, Pilot, Pentel, Faber-Castell, Post-it
+- **FARGE:** Spesifiser farger (blå, sort, rød, flerfarget)
+- **PAKKETSTØRRELSE:** Antall i pakken
+- **MATERIALE:** Plast, metall, gummi, papp
 
-**5. ALL SYNLIG TEKST**:
-- Skriv ned ALT du kan se
-- Inkluder små detaljer
-- Se etter:
-  - Produktkoder/SKU
-  - Strekkoder
-  - "Compatible with..."
-  - Merkelogo
-  - Norske/engelske produktnavn
+**4. ☕ FOR KAFFE/DRIKKE:**
+- **KAFFEKAPSELTYPE:** Nespresso Original, Dolce Gusto, Tassimo, Senseo
+- **KAFFEBØNNER:** Hele bønner, malt, instant
+- **MERKE:** Nespresso, Lavazza, Illy, Jacobs, Friele
+- **SMAK/INTENSITET:** Mild, medium, strong, spesialisert smak
+- **PAKKETSTØRRELSE:** Antall kapsler eller gram
 
-**6. SØKEORD FOR TONERWEB**:
-List opp 5-10 mulige søkeord basert på analysen:
-- Norske termer (pennale, ikke pencil case)
-- Varianter av modellnummer
-- Alternative navn
-- Merke + produkttype kombinasjoner
+**5. 📄 FOR PAPIR & MEDIA:**
+- **PAPIRTYPE:** Kopipapir, fotopapir, labels, kartong
+- **STØRRELSE:** A4, A3, A5, letter
+- **KVALITET:** Gram pr. kvadratmeter (80g, 90g, 100g)
+- **FARGE:** Hvit, crème, farget
+- **PAKKETSTØRRELSE:** Antall ark eller pakker
 
-KRITISK: Din identifikasjon avgjør hele søkestrategien!
-Vær EKSTREMT presis med modellnummer og produkttype.
+**6. 🧹 FOR RENHOLD & HYGIENE:**
+- **PRODUKTTYPE:** Tørkepapir, rengjøringsmiddel, hansker
+- **MERKE:** Plenty, Lambi, Katrin, Tork
+- **ANVENDELSE:** Kjøkken, bad, industri, kontor
+- **STØRRELSE:** Antall ruller, ark, eller volum
 
-Svar strukturert på norsk.`;
+**7. 📦 FOR EMBALLASJE:**
+- **KONVOLUTTTYPE:** C4, C5, DL, kuverter
+- **PAKKMATERIALE:** Bobblefolie, tape, bokser
+- **POSETYPE:** Plastposer, papirposer, søppelposer
+- **STØRRELSE:** Dimensjoner eller volum
+
+**8. 🔋 FOR ELEKTRONIKK:**
+- **BATTERITYPE:** AA, AAA, 9V, knappceller, oppladbare
+- **KABELTYPE:** USB, strøm, HDMI, nettverk
+- **MERKE:** Duracell, Energizer, Varta, Panasonic
+
+**9. 📝 ALL SYNLIG TEKST:**
+Registrer ALT du kan lese:
+- Produktnavn (både norsk og engelsk)
+- Modellnummer og produktkoder
+- Strekkoder og SKU-numre
+- "Kompatibel med..." informasjon
+- Merkelogoer og sertifiseringer
+- Pakketstørrelse og mengdeangivelser
+- Priser og tilbudsinformasjon
+- Produsent og distributør
+
+**10. 🎯 SØKEORD FOR TONERWEB:**
+Generer 8-12 søkeord basert på analysen:
+
+**Norske termer (prioritet):**
+- Norsk produktnavn
+- Norsk merkebetegnelse
+- Norsk kategori-navn
+
+**Produktspesifikke søkeord:**
+- Eksakt modellnummer
+- Merke + modellnummer
+- Produkttype + merke
+- Alternativ stavemåte/forkortelser
+
+**Kategoribaserte søkeord:**
+- Hovedkategori (f.eks. "blekkpatron")
+- Underkategori (f.eks. "Canon blekkpatron")
+- Anvendelsesområde (f.eks. "kontorskriver")
+
+**11. 🔄 ALTERNATIVER & VARIANTER:**
+- Lignende produkter fra samme merke
+- Kompatible alternativer
+- Forskjellige pakketstørrelser
+- Fargealternativer
+
+**KRITISK VIKTIG:**
+Din produktidentifikasjon avgjør hele søkestrategien på tonerweb.no!
+- Vær EKSTREMT presis med modellnummer
+- Spesifiser produkttype med norske termer
+- Inkluder alle relevante detaljer
+- Foreslå alternative søkeord
+
+**📊 SVAR STRUKTURERT PÅ NORSK:**
+
+**PRODUKTTYPE:** [Spesifikk kategori]
+**MERKE:** [Eksakt merke]
+**MODELL:** [Presis modellbetegnelse]
+**DETALJER:** [Alle viktige spesifikasjoner]
+**SØKEORD:** [Liste med 8-12 søkeord for tonerweb.no]
+**ALTERNATIVER:** [Lignende produkter å søke etter]`;
 
     const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
     
