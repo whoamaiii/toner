@@ -17,7 +17,24 @@ interface ExampleQuery {
   isImageUpload?: boolean;
 }
 
-export default function ActionButtons() {
+/**
+ * ActionButtons component for the TonerWeb AI Assistant.
+ *
+ * Presents a grid of pre-defined quick-action buttons that help users kick-off
+ * a search or trigger an image upload. Each button is decorated with an icon
+ * and sample query text. Clicking a button either populates the main search
+ * input with an example query or programmatically opens the hidden file input
+ * when image analysis is requested.
+ *
+ * The component also demonstrates the use of the custom `useToast` hook for
+ * future feedback needs, although no toast is currently displayed.
+ *
+ * @component
+ * @example
+ * <ActionButtons />
+ */
+
+const ActionButtons: React.FC = () => {
   const { toast } = useToast();
 
   const exampleQueries: ExampleQuery[] = [
@@ -62,4 +79,6 @@ export default function ActionButtons() {
       </div>
     </div>
   );
-}
+};
+
+export default ActionButtons;

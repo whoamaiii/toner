@@ -1,7 +1,39 @@
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Zap, Lock } from 'lucide-react';
 
-export default function Header() {
+/**
+ * Header component for the TonerWeb AI Assistant.
+ *
+ * This component renders the top navigation bar with branding, connection status,
+ * and a privacy indicator.
+ *
+ * Key UI Elements:
+ * 1. Gradient logo icon with 💡 lightning symbol
+ * 2. Application title with gradient text
+ * 3. Real-time connection status indicator
+ * 4. "Private" button showing current conversation privacy status
+ *
+ * Styling:
+ *  - Uses Tailwind CSS classes for blur, borders, and gradients
+ *  - Responsive flexbox layout that adapts to varying viewport widths
+ *
+ * @component
+ * @example
+ * // Used at the top of the application layout
+ * import Header from '@/components/header';
+ *
+ * export default function Layout() {
+ *   return (
+ *     <>
+ *       <Header />
+ *       {/* other layout components */}
+ *     </>
+ *   );
+ * }
+ */
+
+const Header: React.FC = () => {
   return (
     <header className="border-b border-gray-800/50 bg-gray-900/50 backdrop-blur-sm">
       <div className="flex items-center justify-between px-6 py-4">
@@ -35,4 +67,6 @@ export default function Header() {
       </div>
     </header>
   );
-}
+};
+
+export default Header;

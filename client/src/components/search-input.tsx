@@ -16,7 +16,7 @@
  * @version 1.0.0
  */
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Search, Image, X } from 'lucide-react';
@@ -66,7 +66,7 @@ interface SearchInputProps {
  *   addMessage={addMessage}
  * />
  */
-export default function SearchInput({ chatState, updateChatState, addMessage }: SearchInputProps) {
+const SearchInput: React.FC<SearchInputProps> = ({ chatState, updateChatState, addMessage }) => {
   // State management for input and image handling
   const [query, setQuery] = useState('');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -337,4 +337,6 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
       </div>
     </div>
   );
-}
+};
+
+export default SearchInput;

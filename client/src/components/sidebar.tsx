@@ -1,9 +1,25 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Menu, Search, History, Settings, HelpCircle, User } from 'lucide-react';
 
-export default function Sidebar() {
+/**
+ * Sidebar component for the TonerWeb AI Assistant.
+ *
+ * Renders a collapsible vertical navigation bar that houses several shortcut
+ * buttons such as search, history, settings, and help. Each button shows a
+ * tooltip on hover. The component keeps a simple `isExpanded` piece of state
+ * that could be leveraged for future width expansion or additional menu items.
+ *
+ * Icons are provided by lucide-react, UI primitives by shadcn/ui (Button,
+ * Tooltip). Styling relies on Tailwind CSS classes.
+ *
+ * @component
+ * @example
+ * <Sidebar />
+ */
+
+const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const sidebarItems = [
@@ -36,4 +52,6 @@ export default function Sidebar() {
       ))}
     </div>
   );
-}
+};
+
+export default Sidebar;

@@ -16,6 +16,7 @@
  * @version 1.0.0
  */
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown, Copy, Share2, Zap } from 'lucide-react';
 import { Message } from '@/types/chat';
@@ -63,7 +64,7 @@ interface ChatMessagesProps {
  *   { id: 2, content: 'Found [Canon PG-540](https://tonerweb.no/...)', role: 'assistant' }
  * ]} />
  */
-export default function ChatMessages({ messages }: ChatMessagesProps) {
+const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
   const { toast } = useToast();
 
   /**
@@ -240,4 +241,6 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
       ))}
     </div>
   );
-}
+};
+
+export default ChatMessages;
