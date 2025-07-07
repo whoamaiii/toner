@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage";
@@ -79,70 +79,76 @@ function validateSessionId(id: string): number {
 }
 
 /**
- * Registers all API routes with the Express application.
- * 
- * This function sets up all the HTTP endpoints for the application and returns
- * an HTTP server instance for further configuration.
- * 
- * @param app - Express application instance
- * @returns {Promise<Server>} HTTP server instance
+ * Cached health status for external APIs
+ * Updated periodically in the background to avoid blocking requests
  */
-export async function registerRoutes(app: Express): Promise<Server> {
-  
-  // Add analytics endpoints
-  addAnalyticsEndpoint(app);
+interface HealthStatus {
+  status: 'ok' | 'error' | 'unknown';
+  lastChecked: string;
+  error?: string;
+}
 
-  // Health check endpoint
-  app.get("/api/health", async (req, res) => {
-    try {
-      const health = {
-        status: "ok",
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        apis: {
-          gemini: {
-            configured: !!process.env.GEMINI_API_KEY,
-            status: "unknown"
-          },
-          openrouter: {
-            configured: !!process.env.OPENROUTER_API_KEY,
-            status: "unknown"
-          }
-        }
-      };
-      
-      // Quick test of Gemini API with timeout
-      if (process.env.GEMINI_API_KEY) {
+const healthCache: {
+  gemini: HealthStatus;
+  openrouter: HealthStatus;
+  lastFullCheck: string;
+} = {
+  gemini: { status: 'unknown', lastChecked: new Date().toISOString() },
+  openrouter: { status: 'unknown', lastChecked: new Date().toISOString() },
+  lastFullCheck: new Date().toISOString()
+};
+
+/**
+ * Performs health checks for external APIs in the background
+ * This runs periodically to keep the health status cache updated
+ */
+async function performBackgroundHealthChecks(): Promise<void> {
+  const startTime = Date.now();
+  
+  // Create promises for concurrent health checks
+  const healthPromises: Array<Promise<void>> = [];
+  
+  // Gemini health check
+  if (process.env.GEMINI_API_KEY) {
+    healthPromises.push(
+      (async () => {
         try {
-          // Set timeout for health check
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Health check timeout')), 5000);
-          });
+          const { GoogleGenerativeAI } = await import("@google/generative-ai");
+          const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+          const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
           
-          const healthCheckPromise = (async () => {
-            const { GoogleGenerativeAI } = await import("@google/generative-ai");
-            const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-            const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-            const response = await model.generateContent("Hello");
-            return response.response.text() ? "ok" : "error";
-          })();
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
           
-          health.apis.gemini.status = await Promise.race([healthCheckPromise, timeoutPromise]) as string;
+          const response = await model.generateContent("Hello");
+          
+          clearTimeout(timeoutId);
+          
+          healthCache.gemini = {
+            status: response.response.text() ? 'ok' : 'error',
+            lastChecked: new Date().toISOString(),
+            error: response.response.text() ? undefined : 'Empty response'
+          };
         } catch (error) {
-          health.apis.gemini.status = "error";
-          logger.debug('Gemini health check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+          healthCache.gemini = {
+            status: 'error',
+            lastChecked: new Date().toISOString(),
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
         }
-      }
-      
-      // Quick test of OpenRouter API with timeout
-      if (process.env.OPENROUTER_API_KEY) {
+      })()
+    );
+  }
+  
+  // OpenRouter health check
+  if (process.env.OPENROUTER_API_KEY) {
+    healthPromises.push(
+      (async () => {
         try {
-          // Set timeout for health check
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Health check timeout')), 5000);
-          });
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
           
-          const healthCheckPromise = fetch("https://openrouter.ai/api/v1/chat/completions", {
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -153,16 +159,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
               messages: [{ role: "user", content: "Hello" }],
               max_tokens: 10
             }),
-            // Add request timeout
-            signal: AbortSignal.timeout(4000)
+            signal: controller.signal
           });
           
-          const response = await Promise.race([healthCheckPromise, timeoutPromise]) as Response;
-          health.apis.openrouter.status = response.ok ? "ok" : "error";
+          clearTimeout(timeoutId);
+          
+          healthCache.openrouter = {
+            status: response.ok ? 'ok' : 'error',
+            lastChecked: new Date().toISOString(),
+            error: response.ok ? undefined : `HTTP ${response.status}`
+          };
         } catch (error) {
-          health.apis.openrouter.status = "error";
-          logger.debug('OpenRouter health check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+          healthCache.openrouter = {
+            status: 'error',
+            lastChecked: new Date().toISOString(),
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
         }
+      })()
+    );
+  }
+  
+  // Wait for all health checks to complete concurrently
+  await Promise.allSettled(healthPromises);
+  
+  healthCache.lastFullCheck = new Date().toISOString();
+  
+  const duration = Date.now() - startTime;
+  logger.debug('Background health checks completed', { 
+    duration, 
+    gemini: healthCache.gemini.status,
+    openrouter: healthCache.openrouter.status 
+  });
+}
+
+/**
+ * Starts the background health check scheduler
+ * Health checks run every 2 minutes to keep status fresh
+ */
+function startHealthCheckScheduler(): void {
+  // Initial health check
+  performBackgroundHealthChecks().catch(error => {
+    logger.error('Initial health check failed', error);
+  });
+  
+  // Schedule periodic health checks every 2 minutes
+  setInterval(() => {
+    performBackgroundHealthChecks().catch(error => {
+      logger.error('Scheduled health check failed', error);
+    });
+  }, 120000); // 2 minutes
+}
+
+/**
+ * Registers all API routes with the Express application.
+ * 
+ * This function sets up all the HTTP endpoints for the application and returns
+ * an HTTP server instance for further configuration.
+ * 
+ * @param app - Express application instance
+ * @returns {Promise<Server>} HTTP server instance
+ */
+export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Start background health check scheduler
+  startHealthCheckScheduler();
+  
+  // Add analytics endpoints
+  addAnalyticsEndpoint(app);
+
+  // Health check endpoint - now serves cached results immediately
+  app.get("/api/health", async (req, res) => {
+    try {
+      const health = {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        lastHealthCheck: healthCache.lastFullCheck,
+        apis: {
+          gemini: {
+            configured: !!process.env.GEMINI_API_KEY,
+            ...healthCache.gemini
+          },
+          openrouter: {
+            configured: !!process.env.OPENROUTER_API_KEY,
+            ...healthCache.openrouter
+          }
+        }
+      };
+      
+      // Determine overall health status
+      const hasErrors = health.apis.gemini.status === 'error' || health.apis.openrouter.status === 'error';
+      if (hasErrors) {
+        health.status = "degraded";
       }
       
       res.json(health);
