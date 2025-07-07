@@ -34,7 +34,7 @@ interface ExampleQuery {
  * <ActionButtons />
  */
 
-export default function ActionButtons() {
+const ActionButtons: React.FC = () => {
   const { toast } = useToast();
 
   const exampleQueries: ExampleQuery[] = [
@@ -79,4 +79,6 @@ export default function ActionButtons() {
       </div>
     </div>
   );
-}
+};
+
+export default ActionButtons;

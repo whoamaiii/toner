@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
@@ -12,7 +13,7 @@ import { AlertCircle } from "lucide-react";
  * <NotFound />
  */
 
-export default function NotFound() {
+const NotFound: React.FC = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md mx-4">
@@ -29,4 +30,6 @@ export default function NotFound() {
       </Card>
     </div>
   );
-}
+};
+
+export default NotFound;

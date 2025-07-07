@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import ChatInterface from '@/components/chat-interface';
 import { Message, ChatState } from '@/types/chat';
 
@@ -15,7 +15,7 @@ import { Message, ChatState } from '@/types/chat';
  * <Home />
  */
 
-export default function Home() {
+const Home: React.FC = () => {
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
     isTyping: false
@@ -49,4 +49,6 @@ export default function Home() {
       </div>
     </div>
   );
-}
+};
+
+export default Home;

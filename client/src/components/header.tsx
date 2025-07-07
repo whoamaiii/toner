@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Zap, Lock } from 'lucide-react';
 
@@ -32,7 +33,7 @@ import { Zap, Lock } from 'lucide-react';
  * }
  */
 
-export default function Header() {
+const Header: React.FC = () => {
   return (
     <header className="border-b border-gray-800/50 bg-gray-900/50 backdrop-blur-sm">
       <div className="flex items-center justify-between px-6 py-4">
@@ -66,4 +67,6 @@ export default function Header() {
       </div>
     </header>
   );
-}
+};
+
+export default Header;

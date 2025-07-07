@@ -1,3 +1,4 @@
+import React from 'react';
 import { Message, ChatState } from '@/types/chat';
 import SearchInput from './search-input';
 import ActionButtons from './action-buttons';
@@ -39,7 +40,7 @@ interface ChatInterfaceProps {
  * />
  */
 
-export default function ChatInterface({ chatState, updateChatState, addMessage }: ChatInterfaceProps) {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatState, updateChatState, addMessage }) => {
   const hasMessages = chatState.messages.length > 0;
 
   return (
@@ -78,4 +79,6 @@ export default function ChatInterface({ chatState, updateChatState, addMessage }
       )}
     </main>
   );
-}
+};
+
+export default ChatInterface;

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Zap } from 'lucide-react';
 
 /**
@@ -19,7 +20,7 @@ import { Zap } from 'lucide-react';
  * <TypingIndicator />
  */
 
-export default function TypingIndicator() {
+const TypingIndicator: React.FC = () => {
   return (
     <div className="mt-4">
       <div className="flex items-center space-x-4 p-6 bg-gray-900/50 rounded-xl border border-gray-800">
@@ -37,4 +38,6 @@ export default function TypingIndicator() {
       </div>
     </div>
   );
-}
+};
+
+export default TypingIndicator;

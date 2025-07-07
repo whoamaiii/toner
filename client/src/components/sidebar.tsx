@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Menu, Search, History, Settings, HelpCircle, User } from 'lucide-react';
@@ -19,7 +19,7 @@ import { Menu, Search, History, Settings, HelpCircle, User } from 'lucide-react'
  * <Sidebar />
  */
 
-export default function Sidebar() {
+const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const sidebarItems = [
@@ -52,4 +52,6 @@ export default function Sidebar() {
       ))}
     </div>
   );
-}
+};
+
+export default Sidebar;
