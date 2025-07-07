@@ -28,47 +28,26 @@ export async function analyzeTonerImage(imageBase64: string): Promise<string> {
       }
     };
 
-    const prompt = `🎯 KRITISK OPPGAVE: Identifiser produkt for presist søk på tonerweb.no
+    const prompt = `🎯 KRITISK OPPGAVE: Identifiser produkt for søk på tonerweb.no
 
-🔍 ANALYSER BILDET GRUNDIG:
+**🏷️ PRODUKTTYPE (basert på faktiske tonerweb.no kategorier):**
 
-**1. 🏷️ PRODUKTTYPE IDENTIFIKASJON (VIKTIGST!):**
-Identifiser hovedkategorien først:
+- [ ] BLEKK/TONER (blekkpatroner, tonerpatroner)
+- [ ] KONTORPRODUKTER (penner, post-it, arkivering)
+- [ ] SKOLE OG FORMING (skolemateriell, formprodukter)
+- [ ] TØRK OG RENHOLD (tørkepapir, hansker, desinfeksjon)
+- [ ] EMBALLASJE OG OPPBEVARING (konvolutter, pakkmateriale)
+- [ ] PAPIR (kopipapir, spesialpapir)
+- [ ] HELSE OG SIKKERHET (sikkerhetsutstyr, helseprodukter)
+- [ ] SPISE OG DRIKKE (kaffe, te, kantineprodukter)
+- [ ] WHITEBOARD/MØTEROM (møteromsutstyr)
+- [ ] KONTORMASKINER (maskiner og utstyr)
+- [ ] DATATILBEHØR (batterier, datamaskin-tilbehør)
+- [ ] MOBIL OG NETTBRETT (mobiltelefon og nettbrett-tilbehør)
+- [ ] HOBBY OG FRITID (hobbyartikler)
+- [ ] ANDRE KATEGORIER (spesifiser hvilken tonerweb.no kategori)
 
-**SKRIVERFORBRUK:**
-- [ ] BLEKKPATRON (ink cartridge) - væske i patron
-- [ ] TONERPATRON (toner cartridge) - pulver i kassett
-
-**KONTORPRODUKTER:**
-- [ ] Penner & Skriveredskaper (kulepenn, blyant, tusj, marker)
-- [ ] Post-it & Notater (selvklebende lapper, notatbok)
-- [ ] Arkivering (perm, mappe, ringperm, arkivboks)
-- [ ] Smårekvisita (tape, lim, saks, stiftemaskin)
-- [ ] Etiketter & Labels (etikettskriver, klistremerker)
-
-**KAFFE & DRIKKE:**
-- [ ] Kaffekapser (Nespresso, Dolce Gusto, andre merker)
-- [ ] Kaffebønner (hele, malt, instant)
-- [ ] Kaffemaskin-tilbehør
-
-**PAPIR & MEDIA:**
-- [ ] Kopipapir (A4, A3, fargede)
-- [ ] Spesialpapir (fotopapir, labels, kartong)
-- [ ] Blokker & Notatbøker
-
-**RENHOLD & HYGIENE:**
-- [ ] Tørkepapir (kjøkkenrull, toalettpapir)
-- [ ] Rengjøringsmidler (såpe, desinfeksjon)
-- [ ] Hansker (gummi, nitril, engangshansker)
-
-**EMBALLASJE:**
-- [ ] Konvolutter (C4, C5, DL, kuverter)
-- [ ] Pakkmateriale (bobblefolie, tape, bokser)
-- [ ] Poser (plast, papir, søppel)
-
-**ELEKTRONIKK:**
-- [ ] Batterier (AA, AAA, 9V, knappceller)
-- [ ] Kabler & Tilbehør (USB, strøm, adaptere)
+**VIKTIG:** Fokuser kun på produkttyper som faktisk finnes på tonerweb.no.
 
 **2. 🔍 FOR BLEKK/TONER - EKSTRAKT NØYAKTIG:**
 - **MERKE:** Canon, HP, Epson, Brother, Samsung, Xerox
