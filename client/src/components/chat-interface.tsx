@@ -11,6 +11,34 @@ interface ChatInterfaceProps {
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
 }
 
+/**
+ * ChatInterface component for the TonerWeb AI Assistant.
+ *
+ * Acts as the orchestrator for the chat experience by combining the following
+ * child components:
+ *
+ * • `SearchInput` – Text & image query input
+ * • `ActionButtons` – Quick-action sample queries (only when chat is empty)
+ * • `ChatMessages` – Scrollable message list
+ * • `TypingIndicator` – Animated banner shown while awaiting AI response
+ *
+ * Local state is kept minimal – only a boolean `hasMessages` derived from the
+ * parent-provided `chatState`. All message and state mutations are delegated to
+ * the callback props so that the component stays presentational and easy to
+ * test.
+ *
+ * Tailwind CSS is used heavily for spacing and responsive layout.
+ *
+ * @component
+ * @param {ChatInterfaceProps} props – Chat state + update helpers
+ * @example
+ * <ChatInterface
+ *   chatState={chatState}
+ *   updateChatState={updateChatState}
+ *   addMessage={addMessage}
+ * />
+ */
+
 export default function ChatInterface({ chatState, updateChatState, addMessage }: ChatInterfaceProps) {
   const hasMessages = chatState.messages.length > 0;
 
