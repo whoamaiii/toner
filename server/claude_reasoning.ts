@@ -19,28 +19,31 @@ import { logger } from "@shared/logger";
 import { generateCacheKey, getCachedReasoningResult, cacheReasoningResult } from "./cache";
 import crypto from "crypto";
 
-// Validate API key at startup
-if (!process.env.OPENROUTER_API_KEY) {
-  logger.error('OPENROUTER_API_KEY environment variable is required for Claude reasoning functionality');
-  throw new Error('OPENROUTER_API_KEY is required');
-}
+// --------------------------------------------------------------
+// Lazy client initialisation & graceful degradation
+// --------------------------------------------------------------
 
-/**
- * OpenAI client configured to use Claude 3.5 Sonnet through OpenRouter.
- * 
- * This client is set up to:
- * - Use OpenRouter as the API gateway for Claude access
- * - Include proper headers for identification
- * - Authenticate using OpenRouter API key from environment variables
- */
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "https://tonerweb.no",
-    "X-Title": "TonerWeb AI Assistant - Claude Reasoning",
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (!process.env.OPENROUTER_API_KEY) {
+    logger.warn('OPENROUTER_API_KEY is missing – Claude reasoning disabled.');
+    return null;
   }
-});
+
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      baseURL: "https://openrouter.ai/api/v1",
+      apiKey: process.env.OPENROUTER_API_KEY,
+      defaultHeaders: {
+        "HTTP-Referer": "https://tonerweb.no",
+        "X-Title": "TonerWeb AI Assistant - Claude Reasoning",
+      },
+    });
+  }
+
+  return openaiClient;
+}
 
 /**
  * Analyzes complex product queries using Claude's advanced reasoning capabilities.
@@ -77,6 +80,13 @@ export async function analyzeComplexQuery(
   const cachedResult = getCachedReasoningResult(cacheKey);
   if (cachedResult) {
     return cachedResult;
+  }
+
+  // Ensure API client is available
+  const openai = getOpenAIClient();
+
+  if (!openai) {
+    return "⚠️ Tjenesten for avansert analyse er for øyeblikket utilgjengelig. Vennligst prøv igjen senere.";
   }
 
   try {

@@ -20,28 +20,32 @@ import { logger } from "@shared/logger";
 import { generateCacheKey, getCachedSearchResult, cacheSearchResult } from "./cache";
 import crypto from "crypto";
 
-// Validate API key at startup
-if (!process.env.OPENROUTER_API_KEY) {
-  logger.error('OPENROUTER_API_KEY environment variable is required for Perplexity functionality');
-  throw new Error('OPENROUTER_API_KEY is required');
-}
+// --------------------------------------------------------------
+// Lazy client initialisation & graceful degradation
+// --------------------------------------------------------------
 
-/**
- * OpenAI client configured to use Perplexity's Sonar model through OpenRouter.
- * 
- * This client is set up to:
- * - Use OpenRouter as the API gateway for Perplexity access
- * - Include proper headers for referral tracking and identification
- * - Authenticate using OpenRouter API key from environment variables
- */
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "https://tonerweb.no", // Optional, for ranking on OpenRouter
-    "X-Title": "TonerWeb AI Assistant", // Optional, for ranking on OpenRouter
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (!process.env.OPENROUTER_API_KEY) {
+    // No key ‑ return null so that callers can gracefully degrade
+    logger.warn('OPENROUTER_API_KEY is missing – Perplexity search disabled.');
+    return null;
   }
-});
+
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      baseURL: "https://openrouter.ai/api/v1",
+      apiKey: process.env.OPENROUTER_API_KEY,
+      defaultHeaders: {
+        "HTTP-Referer": "https://tonerweb.no",
+        "X-Title": "TonerWeb AI Assistant",
+      },
+    });
+  }
+
+  return openaiClient;
+}
 
 /**
  * Main function for searching and recommending products from tonerweb.no.
@@ -84,6 +88,12 @@ const openai = new OpenAI({
  * @throws {Error} When API request fails or image analysis fails
  */
 export async function searchTonerWebProducts(message: string, mode: string, image?: string): Promise<string> {
+  // Ensure we have a usable OpenAI client first
+  const openai = getOpenAIClient();
+  if (!openai) {
+    return "⚠️ Tjenesten for avansert søk er for øyeblikket utilgjengelig. Vennligst prøv igjen senere.";
+  }
+
   const imageHash = image ? crypto.createHash('md5').update(image).digest('hex') : undefined;
   const cacheKey = generateCacheKey(message, mode, imageHash);
   

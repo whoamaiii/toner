@@ -203,7 +203,8 @@ export async function generateTonerWebResponse(message: string, mode: string): P
   try {
     const ai = getGeminiClient();
     if (!ai) {
-      throw new Error('Gemini API er ikke tilgjengelig. Vennligst sjekk API-konfigurasjonen.');
+      logger.warn('Gemini API client not available – returning fallback response.');
+      return '⚠️ Bildeanalyse er midlertidig utilgjengelig. Prøv igjen senere eller beskriv produktet med tekst.';
     }
     
     const systemPrompt = mode === 'DeepSearch' 
