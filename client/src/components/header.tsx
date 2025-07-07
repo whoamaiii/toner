@@ -27,7 +27,7 @@ import { Zap, Lock } from 'lucide-react';
  *   return (
  *     <>
  *       <Header />
- *       {/* other layout components */}
+ *       ...other layout components...
  *     </>
  *   );
  * }

@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage";
@@ -93,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   addAnalyticsEndpoint(app);
 
   // Health check endpoint
-  app.get("/api/health", async (req, res) => {
+  app.get("/api/health", async (req: Request, res: Response) => {
     try {
       const health = {
         status: "ok",
@@ -121,10 +121,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           const healthCheckPromise = (async () => {
             const { GoogleGenerativeAI } = await import("@google/generative-ai");
-            const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
             const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-            const response = await model.generateContent("Hello");
-            return response.response.text() ? "ok" : "error";
+            const gemResp = await model.generateContent("Hello");
+            return gemResp.response.text() ? "ok" : "error";
           })();
           
           health.apis.gemini.status = await Promise.race([healthCheckPromise, timeoutPromise]);
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             signal: AbortSignal.timeout(4000)
           });
           
-          const response = await Promise.race([healthCheckPromise, timeoutPromise]);
+          const response = await Promise.race([healthCheckPromise, timeoutPromise]) as Response;
           health.apis.openrouter.status = response.ok ? "ok" : "error";
         } catch (error) {
           health.apis.openrouter.status = "error";

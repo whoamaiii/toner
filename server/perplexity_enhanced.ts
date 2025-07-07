@@ -108,8 +108,8 @@ export async function searchTonerWebProducts(message: string, mode: string, imag
 3. site:tonerweb.no/search.php?query=[søkeord]
 
 **VIKTIGE PRINSIPPER:**
-- ALDRI oppfinn URL-strukturer som `/k/kategori/underkategori`
-- Bruk kun generiske `site:tonerweb.no` søk
+- ALDRI oppfinn URL-strukturer som /k/kategori/underkategori
+- Bruk kun generiske site:tonerweb.no søk
 - Hvis usikker på kategoristruktur, bruk direkte produktsøk
 - Fokuser på faktiske produktnavn og merker
 
