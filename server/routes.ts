@@ -328,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param {string} req.body.prompt - Text prompt for image generation
    * @returns {Object} JSON response with generated image or feature status message
    */
-  app.post("/api/ai/generate-image", async (req, res) => {
+  app.post("/api/ai/generate-image", async (req: Request, res: Response) => {
     try {
       const { prompt } = req.body;
       
@@ -368,7 +368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param {string} [query] - Optional query parameter for news filtering
    * @returns {Object} JSON response with news data or feature status message
    */
-  app.get("/api/ai/news", async (req, res) => {
+  app.get("/api/ai/news", async (req: Request, res: Response) => {
     try {
       const { query } = req.query;
       
@@ -405,7 +405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param {InsertChatSession} req.body - Chat session data
    * @returns {Object} JSON response with created session data
    */
-  app.post("/api/chat/sessions", async (req, res) => {
+  app.post("/api/chat/sessions", async (req: Request, res: Response) => {
     try {
       const sessionData = insertChatSessionSchema.parse(req.body);
       const session = await storage.createChatSession(sessionData);
@@ -425,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param {number} req.params.id - The chat session ID
    * @returns {Object} JSON response with session data or 404 if not found
    */
-  app.get("/api/chat/sessions/:id", async (req, res) => {
+  app.get("/api/chat/sessions/:id", async (req: Request, res: Response) => {
     try {
       const sessionId = validateSessionId(req.params.id);
       const session = await storage.getChatSession(sessionId);
@@ -451,7 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param {number} req.params.id - The chat session ID
    * @returns {Object} JSON response with array of messages
    */
-  app.get("/api/chat/sessions/:id/messages", async (req, res) => {
+  app.get("/api/chat/sessions/:id/messages", async (req: Request, res: Response) => {
     try {
       const sessionId = validateSessionId(req.params.id);
       const messages = await storage.getSessionMessages(sessionId);
@@ -477,7 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param {InsertMessage} req.body - Message data including content and role
    * @returns {Object} JSON response with created message data
    */
-  app.post("/api/chat/messages", async (req, res) => {
+  app.post("/api/chat/messages", async (req: Request, res: Response) => {
     try {
       const messageData = insertMessageSchema.parse(req.body);
       const message = await storage.createMessage(messageData);
