@@ -127,7 +127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return gemResp.response.text() ? "ok" : "error";
           })();
           
-          health.apis.gemini.status = await Promise.race([healthCheckPromise, timeoutPromise]);
+          const geminiStatus = await Promise.race([healthCheckPromise, timeoutPromise]) as string;
+          health.apis.gemini.status = geminiStatus;
         } catch (error) {
           health.apis.gemini.status = "error";
           logger.debug('Gemini health check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
@@ -157,8 +158,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             signal: AbortSignal.timeout(4000)
           });
           
-          const response = await Promise.race([healthCheckPromise, timeoutPromise]) as Response;
-          health.apis.openrouter.status = response.ok ? "ok" : "error";
+          const fetchResp = await Promise.race([healthCheckPromise, timeoutPromise]) as any;
+          health.apis.openrouter.status = fetchResp && fetchResp.ok ? "ok" : "error";
         } catch (error) {
           health.apis.openrouter.status = "error";
           logger.debug('OpenRouter health check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
