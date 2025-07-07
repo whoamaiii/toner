@@ -14,12 +14,14 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logger } from "@shared/logger";
 import { getServiceHealth, getServiceStatusMessage } from "@shared/service-validator";
+import { globalErrorHandler } from "./error-handler";
+import { CONFIG } from "./config";
 
 const app = express();
 
-// Configure request body parsing with increased limits for image uploads
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Configure request body parsing with configured limits for image uploads
+app.use(express.json({ limit: CONFIG.app.JSON_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: CONFIG.app.URL_ENCODED_LIMIT }));
 
 /**
  * Request logging middleware that captures and logs API requests with their duration and response data.
@@ -56,8 +58,8 @@ app.use((req, res, next) => {
       }
 
       // Truncate long log lines to keep console readable
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      if (logLine.length > CONFIG.app.LOG_MAX_LINE_LENGTH) {
+        logLine = logLine.slice(0, CONFIG.app.LOG_MAX_LINE_LENGTH - 1) + CONFIG.app.LOG_TRUNCATE_SUFFIX;
       }
 
       log(logLine);
@@ -74,14 +76,31 @@ async function validateGeminiApiKey(): Promise<boolean> {
   }
 
   try {
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // Use AbortController with proper cleanup
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    // Test with a simple text generation
-    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const response = await model.generateContent("Hello");
-    
-    return !!response.response.text();
+    try {
+      const { GoogleGenerativeAI } = await import("@google/generative-ai");
+      const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      
+      // Test with a simple text generation
+      const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+      
+      // Race against timeout
+      const response = await Promise.race([
+        model.generateContent("Hello"),
+        new Promise<never>((_, reject) => {
+          controller.signal.addEventListener('abort', () => {
+            reject(new Error('Validation timeout'));
+          });
+        })
+      ]);
+      
+      return !!response.response.text();
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch (error) {
     log(`Gemini API key validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;
@@ -94,27 +113,40 @@ async function validateOpenRouterApiKey(): Promise<boolean> {
   }
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "perplexity/sonar-pro",
-        messages: [{ role: "user", content: "Hello" }],
-        max_tokens: 10
-      })
-    });
+    // Use AbortController with proper timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [{ role: "user", content: "Hello" }],
+          max_tokens: 10
+        }),
+        signal: controller.signal
+      });
 
-    if (response.status === 401) {
-      const errorData = await response.json();
-      log(`OpenRouter API key validation failed: ${errorData.error?.message || 'Authentication failed'}`);
+      if (response.status === 401) {
+        const errorData = await response.json();
+        log(`OpenRouter API key validation failed: ${errorData.error?.message || 'Authentication failed'}`);
+        return false;
+      }
+
+      return response.ok;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      log('OpenRouter API key validation timed out');
       return false;
     }
-
-    return response.ok;
-  } catch (error) {
     log(`OpenRouter API key validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;
   }
@@ -195,34 +227,8 @@ async function validateApiKeys(): Promise<void> {
   // Register all API routes
   const server = await registerRoutes(app);
 
-  /**
-   * Global error handling middleware.
-   * 
-   * Catches all errors thrown in route handlers and returns appropriate HTTP responses.
-   * Uses proper logging instead of console.error.
-   * 
-   * @param err - The error object (can be any type)
-   * @param _req - Express request object (unused)
-   * @param res - Express response object
-   * @param _next - Express next function (unused)
-   */
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    // Only send response if headers haven't been sent yet
-    if (!res.headersSent) {
-      res.status(status).json({ message });
-    }
-    
-    // Log error with proper logging instead of console.error
-    logger.error('Error handled by global error middleware', {
-      status,
-      message,
-      stack: err.stack,
-      name: err.name
-    });
-  });
+  // Use centralized error handling middleware
+  app.use(globalErrorHandler);
 
   // Configure serving based on environment
   // In development: use Vite dev server with HMR
@@ -234,13 +240,13 @@ async function validateApiKeys(): Promise<void> {
   }
 
   // Start the server
-  // Port 3000 is used for both API and client serving
-  // This is the only port that's not firewalled in the deployment environment
-  const port = 3000;
+  // Use configured port and host
   server.listen({
-    port,
-    host: "0.0.0.0",
+    port: CONFIG.app.PORT,
+    host: CONFIG.app.HOST,
   }, () => {
-    log(`🚀 Server running on port ${port}`);
+    log(`🚀 Server running on ${CONFIG.app.HOST}:${CONFIG.app.PORT}`);
+    log(`🔧 Environment: ${CONFIG.app.NODE_ENV}`);
+    log(`📊 Configuration summary:`, CONFIG.app.isDevelopment ? JSON.stringify(CONFIG, null, 2) : 'Production mode');
   });
 })();

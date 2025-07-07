@@ -20,11 +20,14 @@ import { logger } from "@shared/logger";
 import { generateCacheKey, getCachedSearchResult, cacheSearchResult } from "./cache";
 import crypto from "crypto";
 
-// Validate API key at startup
-if (!process.env.OPENROUTER_API_KEY) {
-  logger.error('OPENROUTER_API_KEY environment variable is required for Perplexity functionality');
-  throw new Error('OPENROUTER_API_KEY is required');
-}
+// Configuration for API settings
+const API_CONFIG = {
+  baseURL: process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+  timeout: parseInt(process.env.API_TIMEOUT || '30000'),
+  maxRetries: parseInt(process.env.API_MAX_RETRIES || '3'),
+  referrer: process.env.API_REFERRER || "https://tonerweb.no",
+  title: process.env.API_TITLE || "TonerWeb AI Assistant"
+};
 
 /**
  * OpenAI client configured to use Perplexity's Sonar model through OpenRouter.
@@ -33,15 +36,31 @@ if (!process.env.OPENROUTER_API_KEY) {
  * - Use OpenRouter as the API gateway for Perplexity access
  * - Include proper headers for referral tracking and identification
  * - Authenticate using OpenRouter API key from environment variables
+ * - Handle graceful degradation when API key is not available
  */
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "https://tonerweb.no", // Optional, for ranking on OpenRouter
-    "X-Title": "TonerWeb AI Assistant", // Optional, for ranking on OpenRouter
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (!process.env.OPENROUTER_API_KEY) {
+    logger.warn('OPENROUTER_API_KEY not configured - Perplexity functionality will be unavailable');
+    return null;
   }
-});
+  
+  if (!openai) {
+    openai = new OpenAI({
+      baseURL: API_CONFIG.baseURL,
+      apiKey: process.env.OPENROUTER_API_KEY,
+      timeout: API_CONFIG.timeout,
+      maxRetries: API_CONFIG.maxRetries,
+      defaultHeaders: {
+        "HTTP-Referer": API_CONFIG.referrer,
+        "X-Title": API_CONFIG.title,
+      }
+    });
+  }
+  
+  return openai;
+}
 
 /**
  * Main function for searching and recommending products from tonerweb.no.
@@ -93,7 +112,16 @@ export async function searchTonerWebProducts(message: string, mode: string, imag
   }
 
   logger.debug('searchTonerWebProducts called', { message: message.substring(0, 50) + '...', mode, hasImage: !!image });
-  logger.debug('API Key present', { hasKey: !!(globalThis as any).process?.env?.OPENROUTER_API_KEY });
+  
+  const client = getOpenAIClient();
+  if (!client) {
+    return "⚠️ **Perplexity-søk er ikke tilgjengelig**: OpenRouter API-nøkkelen er ikke konfigurert.\n\n" +
+           "**Løsning**:\n" +
+           "1. Gå til https://openrouter.ai/keys\n" +
+           "2. Opprett en ny API-nøkkel\n" +
+           "3. Legg til OPENROUTER_API_KEY i .env-filen\n" +
+           "4. Start serveren på nytt";
+  }
   
   try {
     // Analyze image if provided using Gemini Vision
@@ -267,7 +295,7 @@ Vennligst søk på tonerweb.no og finn de eksakte produkt-URLene for varene du a
      * - Temperature: 0.2 for consistent, factual responses
      * - Max tokens: 2000 for comprehensive responses
      */
-    const completion = await openai.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "perplexity/sonar-pro",
       messages: [
         {

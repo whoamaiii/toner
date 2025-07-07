@@ -12,6 +12,7 @@
  */
 
 import { logger } from "@shared/logger";
+import { CONFIG } from "./config";
 
 export type QueryType = 'simple' | 'complex' | 'compatibility' | 'comparison' | 'recommendation';
 export type ProcessingStrategy = 'search-only' | 'reasoning-only' | 'search-then-reason' | 'unified-reasoning';
@@ -24,10 +25,15 @@ interface QueryClassification {
   requiresImage: boolean;
 }
 
+interface CompiledPattern {
+  keywords: string[];
+  patterns: RegExp[];
+}
+
 /**
- * Keywords and patterns that indicate different query types
+ * Pre-compiled regex patterns for better performance
  */
-const QUERY_PATTERNS = {
+const COMPILED_PATTERNS: Record<QueryType, CompiledPattern> = {
   // Simple search patterns
   simple: {
     keywords: [
@@ -125,33 +131,33 @@ export function classifyQuery(query: string, hasImage: boolean = false): QueryCl
     recommendation: 0
   };
   
-  // Score based on keywords and patterns
-  for (const [type, config] of Object.entries(QUERY_PATTERNS)) {
-    // Check keywords
+  // Score based on keywords and patterns (optimized)
+  for (const [type, config] of Object.entries(COMPILED_PATTERNS)) {
+    // Check keywords (optimized single pass)
     for (const keyword of config.keywords) {
       if (lowerQuery.includes(keyword)) {
-        scores[type as QueryType] += 2;
+        scores[type as QueryType] += CONFIG.query.KEYWORD_SCORE;
       }
     }
     
-    // Check patterns
+    // Check patterns (pre-compiled regex)
     for (const pattern of config.patterns) {
       if (pattern.test(query)) {
-        scores[type as QueryType] += 3;
+        scores[type as QueryType] += CONFIG.query.PATTERN_SCORE;
       }
     }
   }
   
-  // Adjust scores based on query characteristics
-  if (queryLength < 5) {
-    scores.simple += 3; // Short queries are usually simple searches
-  } else if (queryLength > 15) {
-    scores.complex += 2; // Longer queries often need reasoning
+  // Adjust scores based on query characteristics (using configuration)
+  if (queryLength < CONFIG.query.SIMPLE_QUERY_MAX_WORDS) {
+    scores.simple += CONFIG.query.KEYWORD_SCORE + 1; // Short queries are usually simple searches
+  } else if (queryLength > CONFIG.query.COMPLEX_QUERY_MIN_WORDS) {
+    scores.complex += CONFIG.query.KEYWORD_SCORE; // Longer queries often need reasoning
   }
   
   // If query contains specific product models, boost simple search
   if (/\b[A-Z]{2,}-?\d{2,}/i.test(query)) {
-    scores.simple += 2;
+    scores.simple += CONFIG.query.KEYWORD_SCORE;
   }
   
   // Find the highest scoring type
