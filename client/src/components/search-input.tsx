@@ -165,11 +165,14 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
   const handleSubmit = async () => {
     if (!query.trim() && !uploadedImage) return;
 
+    // Store original query before clearing state
+    const originalQuery = query.trim();
+
     // Create user message with appropriate content
     const userMessage = {
       content: uploadedImage 
-        ? `${query.trim() || 'Analyser dette bildet og finn produkter'}` 
-        : query,
+        ? `${originalQuery || 'Analyser dette bildet og finn produkter'}` 
+        : originalQuery,
       role: 'user' as const
     };
 
@@ -189,9 +192,9 @@ export default function SearchInput({ chatState, updateChatState, addMessage }: 
     updateChatState({ isTyping: true });
 
     try {
-      // Send request to AI service
+      // Send request to AI service with original query
       const response = await aiService.sendMessage(
-        query.trim() || 'Identifiser dette produktet og finn det på tonerweb.no',
+        originalQuery || 'Identifiser dette produktet og finn det på tonerweb.no',
         'DeepSearch',
         imageToSend || undefined
       );
