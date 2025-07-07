@@ -20,15 +20,15 @@ import { Zap, Lock } from 'lucide-react';
  *
  * @component
  * @example
- * // Used at the top of the application layout
+ * Used at the top of the application layout:
  * import Header from '@/components/header';
  *
  * export default function Layout() {
  *   return (
- *     <>
+ *     <div>
  *       <Header />
- *       {/* other layout components */}
- *     </>
+ *       // other layout components
+ *     </div>
  *   );
  * }
  */
