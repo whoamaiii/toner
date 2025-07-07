@@ -26,7 +26,9 @@ import crypto from "crypto";
 let openaiClient: OpenAI | null = null;
 
 function getOpenAIClient(): OpenAI | null {
-  if (!process.env.OPENROUTER_API_KEY) {
+  const apiKey: string | undefined = (globalThis as any).process?.env?.OPENROUTER_API_KEY;
+
+  if (!apiKey) {
     logger.warn('OPENROUTER_API_KEY is missing – Claude reasoning disabled.');
     return null;
   }
@@ -34,7 +36,7 @@ function getOpenAIClient(): OpenAI | null {
   if (!openaiClient) {
     openaiClient = new OpenAI({
       baseURL: "https://openrouter.ai/api/v1",
-      apiKey: process.env.OPENROUTER_API_KEY,
+      apiKey,
       defaultHeaders: {
         "HTTP-Referer": "https://tonerweb.no",
         "X-Title": "TonerWeb AI Assistant - Claude Reasoning",
